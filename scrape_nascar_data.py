@@ -76,21 +76,25 @@ json_data = requests.get('https://www.linestarapp.com/Projections/Sport/NAS/Site
 
 
 
-for i in range(209, 260):
+for i in range(209, 257):
     html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport=9&site=2&periodId={}'.format(i)
     page = requests.get(html).content.decode()   
     json_data = json.loads(page)
 
-table_values = []
+table_values = {}
 
 for i in range(len(json_data['MatchupData'])):
     columns = json_data['MatchupData'][i]['Columns']
     
     for player in range(len(json_data['MatchupData'][i]['PlayerMatchups'])):
         data = json_data['MatchupData'][i]['PlayerMatchups'][player]
-        table_values.append({data['PlayerId']: dict(zip(cols, data['Values']))})
+        table_values[data['PlayerId']] = dict(zip(cols, data['Values']))
         
 ownership_values = []
 
 for player in range(len(json_data['Ownership']['Salaries'])):
     ownership_values.append(json_data['Ownership']['Salaries'][player])
+
+for i in ownership_values:
+    player_id = ownership_values[i]['PID']
+    ownership_values[i].append(table_values[player_id])
