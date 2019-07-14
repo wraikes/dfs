@@ -28,6 +28,7 @@ except:
     
 cur = conn.cursor()
 cur.execute('DROP TABLE IF EXISTS nascar_linestar')
+
 cur.execute('\
     CREATE TABLE IF NOT EXISTS nascar_linestar ( \
     primary_key SERIAL PRIMARY KEY, \
