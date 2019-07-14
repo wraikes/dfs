@@ -11,6 +11,8 @@ def site_load(pid=209):
     owner_data = ownership_data(json_data)
     final_data = combine_data(owner_data, match_data)
     
+    return final_data
+    
 
 def matchup_data(data):
     table_values = dict()
