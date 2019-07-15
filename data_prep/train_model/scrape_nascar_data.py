@@ -1,83 +1,63 @@
+'''Pull FanDuel historical data & projections. Note pid starts at 209.
+'''
 import json
 import requests
 
 
-class DataPull:
-    '''
-    pid starts at 209
-    '''
-    
-    def __init__(self, train, prediction, pid):
+class NascarDataPull:
+
+    def __init__(self, train=True, prediction=False, pid=257):
         self.train = train
         self.prediction = prediction
         self.pid = pid
         
         self._start_pid = 209 if self.train else self.pid
         self._json_data = []
-        self._table_data = []
-        self._owner_data = []
-        self._final_data = []
+        self._final_data = {}
+    
     
     def pull_json_data(self):
 
         for pid in range(self._start_pid, self.pid+1):
             html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport=9&site=2&periodId={}'.format(pid)
-            page = requests.get(html).content.decode()   
-            self._json_data.append(json.loads(page))   
+            page = requests.get(html).content.decode() 
+            data = json.loads(page)
+            self._json_data.append(data)
     
     
-    def extract_matchupdata(self):
+    def extract_owner_data(self):
         
         for race in self._json_data:
-            tables = dict()
-
+            race_id = race['Ownership']['PeriodId']
+            self._final_data[race_id] = {}
+            
+            for player_data in race['Ownership']['Salaries']:
+                player_id = player_data['PID']
+                self._final_data[race_id][player_id] = player_data
+    
+    
+    def extract_table_data(self):
+        for race in self._json_data:
+            race_id = race['Ownership']['PeriodId']
+            
             for i, table in enumerate(race['MatchupData']):
                 col_names = table['Columns']
                 id_store = []
             
                 for player in table['PlayerMatchups']:
                     player_id = player['PlayerId']
-
-                    if player_id in id_store:
+    
+                    if player_id in id_store or player_id not in self._final_data[race_id].keys():
                         continue
                     else:
                         id_store.append(player_id)
                         
-                    player_dict = dict(zip(col_names, player['Values']))                    
+                    player_dict = dict(zip(col_names, player['Values']))                 
                     
-                    if player_id not in tables.keys():
-                        tables[player_id] = player_dict
-                        
-                    else:
-                        for key, value in player_dict.items():
-                            if key in tables[player_id].keys():
-                                tables[player_id]['{}_{}'.format(key, i)]= value
-                                
-                            else:
-                                tables[player_id][key] = value
-                                
-            self._table_data.append(tables)
+                    for key, value in player_dict.items():
+                        if key in self._final_data[race_id][player_id].keys():
+                            self._final_data[race_id][player_id]['{}_{}'.format(key, i)] = value                 
     
-    
-    def extract_owner_data(self):
-        
-        for race in self._json_data:
-            owner_data = []
-                
-            for player_data in data['Ownership']['Salaries']:
-                owner_data.append(player_data)
-                
-            self._owner_data.append(owner_data)
-        
-        
-    def final_data(self):
-        for i in owner_data:
-            player_id = owner_data[i]['PID']
-                    
-            for key, value in table_data[player_id].items():
-                owner_data[i][key] = value
-                    
-        return owner_data
-
-
-
+                        else:
+                            self._final_data[race_id][player_id][key] = value
+                            
