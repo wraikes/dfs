@@ -60,4 +60,3 @@ class NascarDataPull:
     
                         else:
                             self._final_data[race_id][player_id][key] = value
-                            
