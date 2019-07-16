@@ -97,7 +97,7 @@ cur.execute('\
     wins_4 NUMERIC, \
     top_5s_4 NUMERIC, \
     top_10s_4 NUMERIC, \
-    avg_place_4 NUMERIC,
+    avg_place_4 NUMERIC \
     )'
 )
 
@@ -107,7 +107,6 @@ data_pull.extract_owner_data()
 data_pull.extract_table_data()
 
 for race_id in data_pull._final_data.keys():
-    
     for player in data_pull._final_data[race_id].keys():
         
         cur.execute('INSERT INTO nascar_linestar (\
@@ -120,13 +119,13 @@ for race_id in data_pull._final_data.keys():
             qualifying_pos, qualifying_best_lap_time, qualifying_best_lap_speed, \
             laps, miles, surface, restrictor_plate, cautions_race, races_3, \
             finished, wins_3, top_5s, top_10s, avg_place, races_4, finished_4, \
-            wins_4, tops_5s_4, top_10s_4, avg_place_4 \
+            wins_4, top_5s_4, top_10s_4, avg_place_4 \
             ) VALUES (\
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
-            %s, %s, %s, %s, %s)',
+            %s, %s, %s, %s, %s, %s)',
             (
                 race_id,
                 data_pull._final_data[race_id][player]['S'],
@@ -174,7 +173,7 @@ for race_id in data_pull._final_data.keys():
                 float(data_pull._final_data[race_id][player]['Practice Laps']),
                 float(data_pull._final_data[race_id][player]['Practice Best Lap Time']),
                 float(data_pull._final_data[race_id][player]['Practice Best Lap Speed']),
-                float(data_pull._final_data[race_id][player]['Qualifying Pos']) if row['Qualifying Pos'] != '-' else None,
+                float(data_pull._final_data[race_id][player]['Qualifying Pos']) if data_pull._final_data[race_id][player]['Qualifying Pos'] != '-' else None,
                 float(data_pull._final_data[race_id][player]['Qualifying Best Lap Time']),
                 float(data_pull._final_data[race_id][player]['Qualifying Best Lap Speed']),
                 float(data_pull._final_data[race_id][player]['Laps']),
