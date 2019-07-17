@@ -4,37 +4,69 @@ import configparser
 import pandas as pd
 import numpy as np
 
-cfg = configparser.ConfigParser()
-cfg.read('./tmp.ini')
 
-dbname = cfg['PGCONNECT']['dbname']
-host = cfg['PGCONNECT']['host']
-port = cfg['PGCONNECT']['port']
-user = cfg['PGCONNECT']['user']
-password = cfg['PGCONNECT']['password']
+class LoadData:
+    def __init__(self, config_file, db_name, label, predictors, non_numeric_cols):
+        self.config_file = config_file
+        self.db_name = db_name
+        self.label = label
+        self.predictors = predictors
+        self.non_numeric_cols = non_numeric_cols
+        
+        self.cursor = None
+        self.df = []
 
-try:
-    conn = psycopg2.connect(
-        dbname=dbname, 
-        host=host, 
-        port=port, 
-        user=user, 
-        password=password
-    )
-    conn.autocommit = True
-except:
-    print('Unable to connect to the database.')
 
-cur = conn.cursor()
-
-cur.execute('SELECT * FROM nascar_linestar')
-df = []
-for row in cur.fetchall():
-    df.append(row)
+    def setup_connection(self):
+        cfg = configparser.ConfigParser()
+        cfg.read(self.config_file)
     
-df = pd.DataFrame(df)    
-df.columns = [cur.description[i][0] for i in range(len(cur.description))]
+        dbname = cfg['PGCONNECT']['dbname']
+        host = cfg['PGCONNECT']['host']
+        port = cfg['PGCONNECT']['port']
+        user = cfg['PGCONNECT']['user']
+        password = cfg['PGCONNECT']['password']
+    
+        conn = psycopg2.connect(
+            dbname=dbname, 
+            host=host, 
+            port=port, 
+            user=user, 
+            password=password
+        )
+        
+        conn.autocommit = True
+        self.cursor = conn.cursor()
 
+
+    def create_df(self):
+
+        self.cursor.execute('SELECT * FROM {}'.format(self.db_name))
+        for row in self.cursor.fetchall():
+            self.df.append(row)
+    
+        self.df = pd.DataFrame(self.df)
+        self.df.columns = [self.cursor.description[i][0] for i in range(len(self.cursor.description))]
+
+     
+    def data_clean(self):
+        self.df = self.df[self.label+self.predictors].dropna() 
+
+        for col in self.df.columns:
+            if col not in non_numeric_cols:
+                self.df[col] = pd.to_numeric(self.df[col])
+    
+        self.df['_name'] = self.df['name']            
+        self.df = pd.get_dummies(df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+        self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
+    
+        
+non_numeric_cols = [
+    'race_date',
+    'name', 
+    'restrictor_plate',
+    'surface'
+]
 label = ['ps']
 predictors = [
     'name',
@@ -75,26 +107,6 @@ predictors = [
     'top_10s_4',
     'avg_place_4'
 ]
-
-df = df[label+predictors].dropna()
-
-def data_transform(df):
-    
-    for col in df.columns:
-        if col not in ['race_date', 'name', 'restrictor_plate', 'surface']:
-            try:
-                df[col] = pd.to_numeric(df[col])
-            except:
-                print(col, 'not numeric.')
-    
-    df['_name'] = df['name']            
-    df = pd.get_dummies(df, columns=['name', 'restrictor_plate', 'surface'], drop_first=True)
-    df['race_date'] = pd.to_datetime(df['race_date']).dt.date  
-    
-    return df
-
-df = data_transform(df)
-df.to_csv('./tmp.csv')
 
 
 
