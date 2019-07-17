@@ -12,7 +12,7 @@ class Optimizer:
         self.df = df
         
         self.salaries = self.df[['name', 'salary']].set_index('name').to_dict()['salary']
-        self.points = self.df[['name', 'pp']].set_index('name').to_dict()['pp']
+        self.points = self.df[['name', 'preds']].set_index('name').to_dict()['preds']
         self.rewards = []
         self.costs = []
         self.total_drivers = []

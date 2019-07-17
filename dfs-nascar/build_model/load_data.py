@@ -6,13 +6,8 @@ import numpy as np
 
 
 class LoadData:
-    def __init__(self, config_file, db_name, label, predictors, non_numeric_cols):
+    def __init__(self, config_file):
         self.config_file = config_file
-        self.db_name = db_name
-        self.label = label
-        self.predictors = predictors
-        self.non_numeric_cols = non_numeric_cols
-        
         self.cursor = None
         self.df = []
 

@@ -1,27 +1,23 @@
 import pandas as pd
 import numpy as np
-
-from optimizer import Optimizer
-
-from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
-
-opt = Optimizer()
 
 class Model:
     
-    def __init__(self):
-        self.data = None
-    
-    def train(self):
-        pass
-    
-    def test(self):
-        pass        
+    def __init__(self, model, params):
+        self.model = model
+        self.params = params
+        self.predictions = None
+        self.performance = None
+        
+        self.model = None
         
 
-class Performance:
+    def train(self, X_train, y_train):
+        self.model.fit(X_train.drop(columns='name'), y_train)
     
-    def __init__(self):
-        pass
-    
+
+    def test(self, X_test, y_test):
+        X_test['preds'] = self.model.predict(X_test.drop(columns='name'))
+        self.performance = mean_squared_error(y_test, X_test['preds'])**0.5
+        self.predictions = X_test[['name', 'salary', 'preds']]
