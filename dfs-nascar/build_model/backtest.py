@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 
-from load_data import get_data
+from load_data import LoadData
 from build_model import Model, Performance
 
-df = get_data()
+df = LoadData()
 model = Model()
 performance = Performance()
 
