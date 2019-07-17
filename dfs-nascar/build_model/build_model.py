@@ -14,8 +14,14 @@ class Model:
         self.data = None
     
     def train(self):
-        
+        pass
+    
     def test(self):
-        
+        pass        
         
 
+class Performance:
+    
+    def __init__(self):
+        pass
+    

@@ -37,7 +37,7 @@ cur.execute('\
     pid INT, \
     name VARCHAR, \
     pos VARCHAR, \
-    sal NUMERIC, \
+    salary NUMERIC, \
     gid NUMERIC, \
     gi VARCHAR, \
     race_date VARCHAR, \
@@ -110,7 +110,7 @@ for race_id in data_pull._final_data.keys():
     for player in data_pull._final_data[race_id].keys():
         
         cur.execute('INSERT INTO nascar_linestar (\
-            race_id, s, pid, name, pos, sal, gid, gi, race_date, \
+            race_id, s, pid, name, pos, salary, gid, gi, race_date, \
             ppg, pp, ps, ss, stat, is_, notes, floor, ceil, conf, ptid, otid, \
             htid, oe, opprank, opptotal, dspid, dgid, img, pteam, hteam, oteam, \
             lock, id, races, wins, top_fives, top_tens, avg_finish, \
