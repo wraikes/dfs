@@ -1,14 +1,12 @@
-'''Pull FanDuel historical data & projections. Note pid starts at 209.
-'''
+'''Pull FanDuel historical data & projections. Note pid starts at 209.'''
 import json
 import requests
 
 
 class NascarDataPull:
 
-    def __init__(self, train=True, prediction=False, pid=257):
+    def __init__(self, train=True, pid=257):
         self.train = train
-        self.prediction = prediction
         self.pid = pid
         
         self._start_pid = 209 if self.train else self.pid
