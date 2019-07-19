@@ -1,27 +1,40 @@
-import pandas as pd
-from joblib import dump
-from sklearn.metrics import mean_squared_error
+import configparser
+from sklearn.ensemble import RandomForestRegressor
 
-class Model:
+from load_data import LoadData
+from model import Model
+
+
+def pull_data():
+    cfg = configparser.ConfigParser()
+    cfg.read('build_model.ini')
     
-    def __init__(self, model, params):
-        self.model = model
-        self.params = params
-        self.predictions = None
-        self.performance = None
+    label = eval(cfg['TABLEVARIABLES']['label'])
+    predictors = eval(cfg['TABLEVARIABLES']['predictors'])
+    non_numeric_cols = eval(cfg['TABLEVARIABLES']['non_numeric_cols'])
 
-
-    def train(self, X_train, y_train):
-        self.model.fit(X_train.drop(columns='name'), y_train)
+    df = LoadData('tmp.ini', 'nascar_linestar')
+    df.setup_connection()
+    df.create_df()
+    df.data_clean(non_numeric_cols, predictors, label)
     
+    X = df.df[predictors]
+    y = df.df[label]
 
-    def test(self, X_test, y_test):
-        X_test['preds'] = self.model.predict(X_test.drop(columns='name'))
-        self.performance = mean_squared_error(y_test, X_test['preds'])**0.5
-        self.predictions = X_test[['name', 'salary', 'preds']]
-        
+    return X, y
+
+
+def build_model(X, y, path):
+
+    raw_model = RandomForestRegressor()
+    params = []
     
-    def save(self, path):
-        joblib.dump(self.model, path)
+    model = Model(raw_model, params)
+    model.train(X, y)
+    
+    model.save(path)
 
-        
+
+if __name__ == '__main__':
+    X, y = pull_data()
+    build_model(X, y, './nascar_model.joblib')

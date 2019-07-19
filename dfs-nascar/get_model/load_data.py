@@ -52,8 +52,8 @@ class LoadData:
             if col not in non_numeric_cols:
                 self.df[col] = pd.to_numeric(self.df[col])
     
-        self.df['_name'] = self.df['name']            
-        self.df = pd.get_dummies(self.df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
-        self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
+        #self.df['_name'] = self.df['name']            
+        #self.df = pd.get_dummies(self.df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+        #self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
     
         return self.df
