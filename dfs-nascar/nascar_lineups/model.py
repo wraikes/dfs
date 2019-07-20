@@ -28,5 +28,7 @@ class Model:
     
     def save(self, path):
         obj = [self.model, self.col_names]
-        pickle.dump(obj, path)
+        
+        with open(path, 'wb') as f:
+            pickle.dump(obj, f)
         

@@ -1,5 +1,4 @@
 import pandas as pd
-import configparser
 from sklearn.ensemble import RandomForestRegressor
 
 from nascar_lineups.clean_data import LoadData
@@ -7,24 +6,15 @@ from nascar_lineups.model import Model
 
 
 def pull_data():
-    cfg = configparser.ConfigParser()
-    cfg.read('tmp.ini')
-    
-    label = eval(cfg['TABLEVARIABLES']['label'])
-    predictors = eval(cfg['TABLEVARIABLES']['predictors'])
-    non_numeric_cols = eval(cfg['TABLEVARIABLES']['non_numeric_cols'])
-
     df = LoadData('tmp.ini', 'nascar_linestar')
     df.setup_connection()
     df.create_df()
-    df.data_clean(non_numeric_cols, predictors, label)
+    df.data_clean()
     
-    
-    return df
-    #X = df.df[predictors]
-    #y = df.df[label]
+    X = df.df.drop(columns=['race_date', 'ps'])
+    y = df.df['ps']
 
-    #return X, y
+    return X, y
 
 
 def build_model(X, y, path):
@@ -40,4 +30,4 @@ def build_model(X, y, path):
 
 if __name__ == '__main__':
     X, y = pull_data()
-    build_model(X, y, './nascar_model.joblib')
+    build_model(X, y, './nascar_model.pkl')
