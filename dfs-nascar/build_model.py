@@ -1,7 +1,8 @@
+import pandas as pd
 import configparser
 from sklearn.ensemble import RandomForestRegressor
 
-from load_data import LoadData
+from clean_data import LoadData
 from model import Model
 
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import configparser
 from joblib import load
-from scrape_nascar_data import NascarDataPull
+from ..scrape_nascar_data import NascarDataPull
 from optimizer import Optimizer
 
 cfg = configparser.ConfigParser()
