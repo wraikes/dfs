@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from joblib import dump
+import pickle
 from sklearn.metrics import mean_squared_error
 
 class Model:
@@ -19,8 +19,8 @@ class Model:
         X_test['preds'] = self.model.predict(X_test.drop(columns='name'))
         self.performance = mean_squared_error(y_test, X_test['preds'])**0.5
         self.predictions = X_test[['name', 'salary', 'preds']]
-        
+    
     
     def save(self, path):
-        dump(self.model, path)
+        pickle.dump(self, path)
         
