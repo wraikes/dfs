@@ -1,42 +1,47 @@
 import pandas as pd
+import numpy as np
 import configparser
-from joblib import load
-from ..scrape_nascar_data import NascarDataPull
-from optimizer import Optimizer
+import pickle
+from nascar_lineups.scrape_nascar_data import NascarDataPull
+from nascar_lineups.optimizer import Optimizer
 
 cfg = configparser.ConfigParser()
-cfg.read('build_model.ini')
+cfg.read('tmp.ini')
 
 label = eval(cfg['TABLEVARIABLES']['label'])
 predictors = eval(cfg['TABLEVARIABLES']['predictors'])
 non_numeric_cols = eval(cfg['TABLEVARIABLES']['non_numeric_cols'])
 
-df = NascarDataPull(train=False, pid=258)
-df.pull_json_data()
-df.extract_owner_data()
-df.extract_table_data()
+data = NascarDataPull(train=False, pid=258)
+data.pull_json_data()
+data.extract_owner_data()
+data.extract_table_data()
 
-df = df._final_data.copy()
+df = data._final_data.copy()
 df = pd.DataFrame.from_dict(
     {(i, j): df[i][j] for i in df.keys() for j in df[i].keys()},
     orient='index'
 )
 
-def data_clean(df, non_numeric_cols, predictors):
-    
-    df = df[predictors].dropna() 
-    
+def data_clean(df, non_numeric_cols, predictors, label):
+    df = df[label+predictors].dropna() 
     for col in df.columns:
         if col not in non_numeric_cols:
-            try:
-                df[col] = pd.to_numeric(df[col])
-            except:
-                print(col)
-    
+            df[col] = pd.to_numeric(df[col])
+    df['_name'] = df['name']  
+    df['race_date'] = pd.to_datetime(df['race_date']).dt.date  
+    df = pd.get_dummies(df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+    def notes_clean(row):
+        if [i for i in eval(row) if 'Qualified' in i['Note']]:
+            return int([i for i in eval(row) if 'Qualified' in i['Note']][0]['Note'].split(' ')[-3][:-2]) 
+        else:
+            return np.nan
+    df['notes'] = df['notes'].apply(lambda x: notes_clean(x))
+    df['notes'] = np.where(df['notes'].isnull(), 
+                        df['qualifying_pos'], 
+                            df['notes'])
     return df
 
-
-df = data_clean(df, non_numeric_cols, predictors)
 df.columns = [
     's', 'pid', 'name', 'pos', 'salary', 'gid', 'gi', 'race_date', 
     'ppg', 'pp', 'ps', 'ss', 'stat', 'is_', 'notes', 'floor', 'ceil', 'conf', 'ptid', 'otid', 
@@ -49,13 +54,20 @@ df.columns = [
     'finished', 'wins_3', 'top_5s', 'top_10s', 'avg_place', 'races_4', 'finished_4', 
     'wins_4', 'top_5s_4', 'top_10s_4', 'avg_place_4'
 ]
+df['qualifying_pos'] = 10  #turn off when this is ready
+df_test = data_clean(df, non_numeric_cols, predictors, label)
 
 # load model
-model = load('../get_model/nascar_model.joblib')
-model.predict(df[predictors])
+with open('./nascar_model.pkl', 'rb') as file:
+    model = pickle.load(file)
+
+for col in model[1]:
+    if col not in df_test.columns:
+        df_test[col] = 0
+df_test['preds'] = model[0].predict(df_test[model[1]])
 
 # get predictions
-opt = Optimizer(df)
+opt = Optimizer(df_test)
 opt.solve()
 opt.get_lineup()
 
