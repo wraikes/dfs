@@ -2,13 +2,13 @@ import pandas as pd
 import configparser
 from sklearn.ensemble import RandomForestRegressor
 
-from clean_data import LoadData
-from model import Model
+from nascar_lineups.clean_data import LoadData
+from nascar_lineups.model import Model
 
 
 def pull_data():
     cfg = configparser.ConfigParser()
-    cfg.read('build_model.ini')
+    cfg.read('tmp.ini')
     
     label = eval(cfg['TABLEVARIABLES']['label'])
     predictors = eval(cfg['TABLEVARIABLES']['predictors'])
@@ -19,10 +19,12 @@ def pull_data():
     df.create_df()
     df.data_clean(non_numeric_cols, predictors, label)
     
-    X = df.df[predictors]
-    y = df.df[label]
+    
+    return df
+    #X = df.df[predictors]
+    #y = df.df[label]
 
-    return X, y
+    #return X, y
 
 
 def build_model(X, y, path):

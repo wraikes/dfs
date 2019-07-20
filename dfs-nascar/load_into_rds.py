@@ -2,7 +2,7 @@
 import psycopg2
 import boto3
 import configparser
-from scrape_nascar_data import NascarDataPull
+from nascar_lineups.scrape_nascar_data import NascarDataPull
 
 cfg = configparser.ConfigParser()
 cfg.read('tmp.ini')
