@@ -32,4 +32,4 @@ class Optimizer:
     def get_lineup(self):
         for v in self.optimizer.variables():
             if v.varValue > 0:
-                self.lineup.append(v.name)
+                self.lineup.append(' '.join(v.name.split('_')))

@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import BayesianRidge
 
 from nascar_lineups.clean_data import LoadData
 from nascar_lineups.model import Model
@@ -19,7 +19,7 @@ def pull_data():
 
 def build_model(X, y, path):
 
-    raw_model = RandomForestRegressor()
+    raw_model = BayesianRidge()
     params = []
     
     model = Model(raw_model, params)
