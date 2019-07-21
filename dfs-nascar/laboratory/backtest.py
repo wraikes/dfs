@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from load_data import LoadData
-from optimizer import Optimizer
-from build_model import Model
+from ..nascar_lineups.load_data import LoadData
+from ..nascar_lineups.optimizer import Optimizer
+from ..nascar_lineups.build_model import Model
 
 non_numeric_cols = ['race_date', 'name', 'restrictor_plate', 'surface']
 label = ['ps']

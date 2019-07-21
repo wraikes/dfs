@@ -24,22 +24,28 @@ df = pd.DataFrame.from_dict(
 )
 
 def data_clean(df, non_numeric_cols, predictors, label):
+    
     df = df[label+predictors].dropna() 
+    
     for col in df.columns:
         if col not in non_numeric_cols:
             df[col] = pd.to_numeric(df[col])
+    
     df['_name'] = df['name']  
     df['race_date'] = pd.to_datetime(df['race_date']).dt.date  
     df = pd.get_dummies(df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+    
     def notes_clean(row):
         if [i for i in eval(row) if 'Qualified' in i['Note']]:
             return int([i for i in eval(row) if 'Qualified' in i['Note']][0]['Note'].split(' ')[-3][:-2]) 
         else:
             return np.nan
+    
     df['notes'] = df['notes'].apply(lambda x: notes_clean(x))
     df['notes'] = np.where(df['notes'].isnull(), 
                         df['qualifying_pos'], 
                             df['notes'])
+    
     return df
 
 df.columns = [
@@ -54,20 +60,21 @@ df.columns = [
     'finished', 'wins_3', 'top_5s', 'top_10s', 'avg_place', 'races_4', 'finished_4', 
     'wins_4', 'top_5s_4', 'top_10s_4', 'avg_place_4'
 ]
-df['qualifying_pos'] = 10  #turn off when this is ready
-df_test = data_clean(df, non_numeric_cols, predictors, label)
+
+df['qualifying_pos'] = np.where(df['qualifying_pos']=='-', 25, df['qualifying_pos'])
+df = data_clean(df, non_numeric_cols, predictors, label)
 
 # load model
 with open('./nascar_model.pkl', 'rb') as file:
     model = pickle.load(file)
 
 for col in model[1]:
-    if col not in df_test.columns:
-        df_test[col] = 0
-df_test['preds'] = model[0].predict(df_test[model[1]])
+    if col not in df.columns:
+        df[col] = 0
+df['preds'] = model[0].predict(df[model[1]])
 
 # get predictions
-opt = Optimizer(df_test)
+opt = Optimizer(df)
 opt.solve()
 opt.get_lineup()
 

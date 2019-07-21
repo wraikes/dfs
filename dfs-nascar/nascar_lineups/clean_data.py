@@ -58,6 +58,9 @@ class LoadData:
         for col in self.df.columns:
             if col not in non_numeric_cols:
                 self.df[col] = pd.to_numeric(self.df[col])
+
+        self.df = self.df[label+predictors].dropna() 
+
     
         self.df['_name'] = self.df['name']  
         self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
@@ -73,3 +76,4 @@ class LoadData:
         self.df['notes'] = np.where(self.df['notes'].isnull(), 
                             self.df['qualifying_pos'], 
                                 self.df['notes'])
+        

@@ -2,7 +2,10 @@
 import psycopg2
 import boto3
 import configparser
+import sys
 from nascar_lineups.scrape_nascar_data import NascarDataPull
+
+pid = 257
 
 cfg = configparser.ConfigParser()
 cfg.read('tmp.ini')
@@ -101,7 +104,7 @@ cur.execute('\
     )'
 )
 
-data_pull = NascarDataPull(train=True, pid=212)
+data_pull = NascarDataPull(train=True, pid=pid)
 data_pull.pull_json_data()
 data_pull.extract_owner_data()
 data_pull.extract_table_data()
