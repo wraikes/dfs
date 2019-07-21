@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
 
 class Model:
     def __init__(self, model, params):
