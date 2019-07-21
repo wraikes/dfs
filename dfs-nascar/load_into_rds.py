@@ -100,7 +100,12 @@ cur.execute('\
     wins_4 NUMERIC, \
     top_5s_4 NUMERIC, \
     top_10s_4 NUMERIC, \
-    avg_place_4 NUMERIC \
+    avg_place_4 NUMERIC, \
+    owned NUMERIC, \
+    salaryid NUMERIC, \
+    lovecount NUMERIC, \
+    hatecount NUMERIC, \
+    adj NUMERIC \
     )'
 )
 
@@ -108,6 +113,7 @@ data_pull = NascarDataPull(train=True, pid=pid)
 data_pull.pull_json_data()
 data_pull.extract_owner_data()
 data_pull.extract_table_data()
+data_pull.extract_adjustment_data()
 
 for race_id in data_pull._final_data.keys():
     for player in data_pull._final_data[race_id].keys():
@@ -122,13 +128,14 @@ for race_id in data_pull._final_data.keys():
             qualifying_pos, qualifying_best_lap_time, qualifying_best_lap_speed, \
             laps, miles, surface, restrictor_plate, cautions_race, races_3, \
             finished, wins_3, top_5s, top_10s, avg_place, races_4, finished_4, \
-            wins_4, top_5s_4, top_10s_4, avg_place_4 \
+            wins_4, top_5s_4, top_10s_4, avg_place_4, owned, salaryid, lovecount, \
+            hatecount, adj \
             ) VALUES (\
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
-            %s, %s, %s, %s, %s, %s)',
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             (
                 race_id,
                 data_pull._final_data[race_id][player]['S'],
@@ -195,6 +202,11 @@ for race_id in data_pull._final_data.keys():
                 float(data_pull._final_data[race_id][player]['Wins_4']),
                 float(data_pull._final_data[race_id][player]['Top 5s_4']),
                 float(data_pull._final_data[race_id][player]['Top 10s_4']),
-                float(data_pull._final_data[race_id][player]['Avg. Place_4'])
+                float(data_pull._final_data[race_id][player]['Avg. Place_4']),
+                float(data_pull._final_data[race_id][player]['Owned']),
+                float(data_pull._final_data[race_id][player]['SalaryId']),
+                float(data_pull._final_data[race_id][player]['LoveCount']),
+                float(data_pull._final_data[race_id][player]['HateCount']),
+                float(data_pull._final_data[race_id][player]['Adj'])
             )
         )

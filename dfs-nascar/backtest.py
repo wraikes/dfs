@@ -4,7 +4,7 @@ import numpy as np
 from nascar_lineups.clean_data import LoadData
 from nascar_lineups.optimizer import Optimizer
 from nascar_lineups.model import Model
-#from sklearn.preprocessing import robust_scale
+#from sklearn.preprocessing import power_transform
 
 load = LoadData('./tmp.ini', 'nascar_linestar')
 load.setup_connection()
@@ -13,10 +13,14 @@ load.data_clean()
 
 # for col in load.df.columns:
 #     if (load.df[col].dtype == 'float' or load.df[col].dtype == 'int') and col != 'ps' and col != 'salary':
-#         load.df[col] = robust_scale(load.df[col].values.reshape(-1, 1))
+#         try:
+#             load.df[col] = power_transform(load.df[col].values.reshape(-1, 1))
+#         except:
+#             pass
 df = load.df.copy()
 #df['practice_best_lap_time'] = df['practice_best_lap_time'] * (df['miles'] / df['laps'])
 #df['qualifying_best_lap_time'] * (df['miles'] / df['laps'])
+df.drop(columns=[x for x in df.columns if '_name_' in x], inplace=True)
 
 #from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import BayesianRidge
@@ -44,14 +48,17 @@ for date in df.race_date.sort_values().unique()[1:]:
     opt.get_lineup()
     
     results = df_test[df_test['name'].isin(opt.lineup)]
-    
+
     performance[date] = {
         "score": results['ps'].sum(),
-        'salary': results['salary'].sum()
+        'salary': results['salary'].sum(),
+        #'projected': model.predictions[model.predictions.name.isin(results.name)]
     }
+    
 
-#print(performance)
-
+import pprint
+pprint.pprint(performance)
+pprint.pprint(model.col_names)
 score = []
 for date in performance.keys():
     score.append(performance[date]['score'])

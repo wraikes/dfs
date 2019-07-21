@@ -16,6 +16,7 @@ data = NascarDataPull(train=False, pid=258)
 data.pull_json_data()
 data.extract_owner_data()
 data.extract_table_data()
+data.extract_adjustment_data()
 
 df = data._final_data.copy()
 df = pd.DataFrame.from_dict(
@@ -31,9 +32,9 @@ def data_clean(df, non_numeric_cols, predictors, label):
         if col not in non_numeric_cols:
             df[col] = pd.to_numeric(df[col])
     
-    df['_name'] = df['name']  
+    #df['_name'] = df['name']  
     df['race_date'] = pd.to_datetime(df['race_date']).dt.date  
-    df = pd.get_dummies(df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+    df = pd.get_dummies(df, columns=['restrictor_plate', 'surface'], drop_first=True)
     
     def notes_clean(row):
         if [i for i in eval(row) if 'Qualified' in i['Note']]:
@@ -58,7 +59,8 @@ df.columns = [
     'qualifying_pos', 'qualifying_best_lap_time', 'qualifying_best_lap_speed', 
     'laps', 'miles', 'surface', 'restrictor_plate', 'cautions_race', 'races_3', 
     'finished', 'wins_3', 'top_5s', 'top_10s', 'avg_place', 'races_4', 'finished_4', 
-    'wins_4', 'top_5s_4', 'top_10s_4', 'avg_place_4'
+    'wins_4', 'top_5s_4', 'top_10s_4', 'avg_place_4', 'salaryid', 
+    'lovecount', 'hatecount', 'adj', 'owned'
 ]
 
 df['qualifying_pos'] = np.where(df['qualifying_pos']=='-', 25, df['qualifying_pos'])

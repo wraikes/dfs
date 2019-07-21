@@ -62,9 +62,9 @@ class LoadData:
         self.df = self.df[label+predictors].dropna() 
 
     
-        self.df['_name'] = self.df['name']  
+        #self.df['_name'] = self.df['name']  
         self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
-        self.df = pd.get_dummies(self.df, columns=['_name', 'restrictor_plate', 'surface'], drop_first=True)
+        self.df = pd.get_dummies(self.df, columns=['restrictor_plate', 'surface'], drop_first=True)
         
         def notes_clean(row):
             if [i for i in eval(row) if 'Qualified' in i['Note']]:

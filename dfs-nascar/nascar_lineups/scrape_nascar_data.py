@@ -58,3 +58,41 @@ class NascarDataPull:
     
                         else:
                             self._final_data[race_id][player_id][key] = value
+
+    def extract_adjustment_data(self):
+        for race in self._json_data:
+            race_id = race['Ownership']['PeriodId']
+                
+            for key in race['Ownership']['Projected'].keys():
+                
+                for player in race['Ownership']['Projected'][key]:
+                    player_id = player['PlayerId']
+                    self._final_data[race_id][player_id]['Owned'] = player['Owned']
+                    self._final_data[race_id][player_id]['SalaryId'] = player['SalaryId']
+                    
+            for player_id in self._final_data[race_id].keys():
+                if 'SalaryId' not in self._final_data[race_id][player_id].keys():
+                    self._final_data[race_id][player_id]['SalaryId'] = 0
+                    self._final_data[race_id][player_id]['LoveCount'] = 0
+                    self._final_data[race_id][player_id]['HateCount'] = 0
+                    self._final_data[race_id][player_id]['Adj'] = 0            
+            
+        
+            for player in race['AvgAdjustments']:
+                salary_id = player['SalaryId']
+                for player_id in self._final_data[race_id].keys():
+                    if self._final_data[race_id][player_id]['SalaryId'] == salary_id:
+                        self._final_data[race_id][player_id]['LoveCount'] = player['LoveCount']
+                        self._final_data[race_id][player_id]['HateCount'] = player['HateCount']
+                        self._final_data[race_id][player_id]['Adj'] = player['Adj']
+                        
+            for player_id in self._final_data[race_id].keys():
+                if 'LoveCount' not in self._final_data[race_id][player_id].keys():
+                    self._final_data[race_id][player_id]['LoveCount'] = 0
+                    self._final_data[race_id][player_id]['HateCount'] = 0
+                    self._final_data[race_id][player_id]['Adj'] = 0
+
+        
+        
+
+    
