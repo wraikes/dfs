@@ -44,6 +44,12 @@ class LoadData:
         self.df = pd.DataFrame(self.df)
         self.df.columns = [self.cursor.description[i][0] for i in range(len(self.cursor.description))]
 
+    def _notes_clean(self, row):
+        if [i for i in eval(row) if 'Qualified' in i['Note']]:
+            return int([i for i in eval(row) if 'Qualified' in i['Note']][0]['Note'].split(' ')[-3][:-2]) 
+        else:
+            return np.nan
+            
      
     def data_clean(self):
         cfg = configparser.ConfigParser()
@@ -61,18 +67,11 @@ class LoadData:
 
         self.df = self.df[label+predictors].dropna() 
 
-    
+        ###new variable creations
         #self.df['_name'] = self.df['name']  
         self.df['race_date'] = pd.to_datetime(self.df['race_date']).dt.date  
         self.df = pd.get_dummies(self.df, columns=['restrictor_plate', 'surface'], drop_first=True)
-        
-        def notes_clean(row):
-            if [i for i in eval(row) if 'Qualified' in i['Note']]:
-                return int([i for i in eval(row) if 'Qualified' in i['Note']][0]['Note'].split(' ')[-3][:-2]) 
-            else:
-                return np.nan
-        
-        self.df['notes'] = self.df['notes'].apply(lambda x: notes_clean(x))
+        self.df['notes'] = self.df['notes'].apply(lambda x: self._notes_clean(x))
         self.df['notes'] = np.where(self.df['notes'].isnull(), 
                             self.df['qualifying_pos'], 
                                 self.df['notes'])
