@@ -76,7 +76,7 @@ class NascarDataPull:
                     self._final_data[race_id][player_id]['LoveCount'] = 0
                     self._final_data[race_id][player_id]['HateCount'] = 0
                     self._final_data[race_id][player_id]['Adj'] = 0            
-            
+                    self._final_data[race_id][player_id]['Owned'] = 0 
         
             for player in race['AvgAdjustments']:
                 salary_id = player['SalaryId']

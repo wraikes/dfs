@@ -18,6 +18,189 @@ data.extract_owner_data()
 data.extract_table_data()
 data.extract_adjustment_data()
 
+append_data = {258: {
+    9: {
+        'Owned': 26.25,
+        'LoveCount': 3,
+        'HateCount': 0 
+    },
+    34: {
+        'Owned': 25,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    44: {
+        'Owned': 24.8,
+        'LoveCount': 2,
+        'HateCount': 0 
+    },
+    15: {
+        'Owned': 24.05,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    19: {
+        'Owned': 22.05,
+        'LoveCount': 1,
+        'HateCount': 2 
+    },
+    14: {
+        'Owned': 18,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    8: {
+        'Owned': 27.95,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    102: {
+        'Owned': 20.85,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    81: {
+        'Owned': 19.05,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    86: {
+        'Owned': 15.85,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    85: {
+        'Owned': 19.55,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    16: {
+        'Owned': 18.9,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    6: {
+        'Owned': 16.2,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    104: {
+        'Owned': 22.2,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    1: {
+        'Owned': 20.7,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    141: {
+        'Owned': 19.5,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    155: {
+        'Owned': 17,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    28: {
+        'Owned': 24.8,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    53: {
+        'Owned': 13.65,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    57: {
+        'Owned': 11.15,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    101: {
+        'Owned': 21.4,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    26: {
+        'Owned': 15.45,
+        'LoveCount': 1,
+        'HateCount': 0 
+    },
+    159: {
+        'Owned': 9.15,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    99: {
+        'Owned': 16,
+        'LoveCount': 1,
+        'HateCount': 1 
+    },
+    109: {
+        'Owned': 6.45,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    91: {
+        'Owned': 10.2,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    42: {
+        'Owned': 10.05,
+        'LoveCount': 0,
+        'HateCount': 2
+    },
+    95: {
+        'Owned': 4.95,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    29: {
+        'Owned': 7.55,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    145: {
+        'Owned': 8.65,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    167: {
+        'Owned': 5.15,
+        'LoveCount': 0,
+        'HateCount': 0 
+    },
+    41: {
+        'Owned': 2.3,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    144: {
+        'Owned': 4,
+        'LoveCount': 0,
+        'HateCount': 2
+    },
+    31: {
+        'Owned': 2.15,
+        'LoveCount': 0,
+        'HateCount': 1 
+    },
+    168: {
+        'Owned': 2,
+        'LoveCount': 0,
+        'HateCount': 0 
+    }
+}}
+
+for player in append_data[258].keys():
+    data._final_data[258][player]['Owned'] = append_data[258][player]['Owned']
+    data._final_data[258][player]['LoveCount'] = append_data[258][player]['LoveCount']
+    data._final_data[258][player]['HateCount'] = append_data[258][player]['HateCount']
+
 df = data._final_data.copy()
 df = pd.DataFrame.from_dict(
     {(i, j): df[i][j] for i in df.keys() for j in df[i].keys()},
@@ -73,6 +256,7 @@ with open('./nascar_model.pkl', 'rb') as file:
 for col in model[1]:
     if col not in df.columns:
         df[col] = 0
+        
 df['preds'] = model[0].predict(df[model[1]])
 
 # get predictions
