@@ -76,3 +76,4 @@ class LoadData:
                             self.df['qualifying_pos'], 
                                 self.df['notes'])
         
+        

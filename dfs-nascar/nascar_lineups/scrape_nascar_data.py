@@ -5,7 +5,7 @@ import requests
 
 class NascarDataPull:
 
-    def __init__(self, train=True, pid=257):
+    def __init__(self, train=True, pid=258):
         self.train = train
         self.pid = pid
         
@@ -62,37 +62,25 @@ class NascarDataPull:
     def extract_adjustment_data(self):
         for race in self._json_data:
             race_id = race['Ownership']['PeriodId']
-                
-            for key in race['Ownership']['Projected'].keys():
-                
-                for player in race['Ownership']['Projected'][key]:
-                    player_id = player['PlayerId']
-                    self._final_data[race_id][player_id]['Owned'] = player['Owned']
-                    self._final_data[race_id][player_id]['SalaryId'] = player['SalaryId']
-                    
-            for player_id in self._final_data[race_id].keys():
-                if 'SalaryId' not in self._final_data[race_id][player_id].keys():
-                    self._final_data[race_id][player_id]['SalaryId'] = 0
-                    self._final_data[race_id][player_id]['LoveCount'] = 0
-                    self._final_data[race_id][player_id]['HateCount'] = 0
-                    self._final_data[race_id][player_id]['Adj'] = 0            
-                    self._final_data[race_id][player_id]['Owned'] = 0 
-        
-            for player in race['AvgAdjustments']:
-                salary_id = player['SalaryId']
+            key = list(race['Ownership']['Projected'].keys())[0]
+            
+            for player in race['Ownership']['Projected'][key]:
+                player_id = player['PlayerId']
+                self._final_data[race_id][player_id]['SalaryId'] = player['SalaryId']
+                self._final_data[race_id][player_id]['Owned'] = player['Owned']
+                self._final_data[race_id][player_id]['HateCount'] = None
+                self._final_data[race_id][player_id]['LoveCount'] = None
+            else:
                 for player_id in self._final_data[race_id].keys():
-                    if self._final_data[race_id][player_id]['SalaryId'] == salary_id:
-                        self._final_data[race_id][player_id]['LoveCount'] = player['LoveCount']
-                        self._final_data[race_id][player_id]['HateCount'] = player['HateCount']
-                        self._final_data[race_id][player_id]['Adj'] = player['Adj']
-                        
+                    if 'SalaryId' not in self._final_data[race_id][player_id].keys():
+                        for _key in ['SalaryId', 'Owned', 'HateCount', 'LoveCount']:
+                            self._final_data[race_id][player_id][_key] = None
+            
             for player_id in self._final_data[race_id].keys():
-                if 'LoveCount' not in self._final_data[race_id][player_id].keys():
-                    self._final_data[race_id][player_id]['LoveCount'] = 0
-                    self._final_data[race_id][player_id]['HateCount'] = 0
-                    self._final_data[race_id][player_id]['Adj'] = 0
-
-        
-        
-
-    
+                if self._final_data[race_id][player_id]['SalaryId']:
+                    salary_id = self._final_data[race_id][player_id]['SalaryId']
+                    
+                    for player in race['AvgAdjustments']:
+                        if salary_id == player['SalaryId']:
+                            for _key in ['HateCount', 'LoveCount', 'Adj']:
+                                self._final_data[race_id][player_id][_key] = player[_key]
