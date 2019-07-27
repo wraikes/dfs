@@ -83,5 +83,5 @@ class NascarDataPull:
                     
                     for player in race['AvgAdjustments']:
                         if salary_id == player['SalaryId']:
-                            for _key in ['HateCount', 'LoveCount', 'Adj']:
+                            for _key in ['HateCount', 'LoveCount']:
                                 self._final_data[race_id][player_id][_key] = player[_key]

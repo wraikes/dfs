@@ -5,7 +5,7 @@ import configparser
 import sys
 from nascar_lineups.scrape_nascar_data import NascarDataPull
 
-pid = 257
+pid = int(sys.argv[1]) #current pid
 
 cfg = configparser.ConfigParser()
 cfg.read('tmp.ini')
@@ -104,8 +104,7 @@ cur.execute('\
     owned NUMERIC, \
     salaryid NUMERIC, \
     lovecount NUMERIC, \
-    hatecount NUMERIC, \
-    adj NUMERIC \
+    hatecount NUMERIC \
     )'
 )
 
@@ -116,6 +115,7 @@ data_pull.extract_table_data()
 data_pull.extract_adjustment_data()
 
 for race_id in data_pull._final_data.keys():
+
     for player in data_pull._final_data[race_id].keys():
         
         cur.execute('INSERT INTO nascar_linestar (\
@@ -129,13 +129,13 @@ for race_id in data_pull._final_data.keys():
             laps, miles, surface, restrictor_plate, cautions_race, races_3, \
             finished, wins_3, top_5s, top_10s, avg_place, races_4, finished_4, \
             wins_4, top_5s_4, top_10s_4, avg_place_4, owned, salaryid, lovecount, \
-            hatecount, adj \
+            hatecount \
             ) VALUES (\
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, \
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             (
                 race_id,
                 data_pull._final_data[race_id][player]['S'],
@@ -205,8 +205,7 @@ for race_id in data_pull._final_data.keys():
                 float(data_pull._final_data[race_id][player]['Avg. Place_4']),
                 float(data_pull._final_data[race_id][player]['Owned']),
                 float(data_pull._final_data[race_id][player]['SalaryId']),
-                float(data_pull._final_data[race_id][player]['LoveCount']),
-                float(data_pull._final_data[race_id][player]['HateCount']),
-                float(data_pull._final_data[race_id][player]['Adj'])
+                float(data_pull._final_data[race_id][player]['LoveCount']) if data_pull._final_data[race_id][player]['LoveCount'] else 0,
+                float(data_pull._final_data[race_id][player]['HateCount']) if data_pull._final_data[race_id][player]['HateCount'] else 0
             )
         )

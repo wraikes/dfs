@@ -1,14 +1,14 @@
 import pandas as pd, numpy as np
 import scrapy
 
-class QuotesSpider(scrapy.Spider):
+
+class NascarSpider(scrapy.Spider):
     name = "projections"
 
     def start_requests(self):
-        with open("./current_projections", "rt") as f:
-            urls = [url.strip() for url in f.readlines()]
+        start_urls = ['file:///home/ubuntu/environment/dfs-nascar/dfs-nascar/current_projections']
             
-        for url in urls:
+        for url in start_urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
