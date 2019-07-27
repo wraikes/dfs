@@ -59,6 +59,7 @@ class NascarDataPull:
                         else:
                             self._final_data[race_id][player_id][key] = value
 
+
     def extract_adjustment_data(self):
         for race in self._json_data:
             race_id = race['Ownership']['PeriodId']
