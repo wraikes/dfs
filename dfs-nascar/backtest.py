@@ -11,11 +11,9 @@ load.create_df()
 load.data_clean()
 df = load.df.copy()
 
-df.drop(columns=[x for x in df.columns if '_name_' in x], inplace=True)
-
 from sklearn.linear_model import BayesianRidge
 model = BayesianRidge()
-params = ['']
+params = []
 model = Model(model, params)
 
 performance = {}
