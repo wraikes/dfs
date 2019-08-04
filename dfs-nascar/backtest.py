@@ -61,3 +61,5 @@ preds = []
 for date in performance.keys():
     preds.append(performance[date]['preds'])
 print('Avg Projected Pts:', pd.Series(preds).mean())
+
+print(performance)

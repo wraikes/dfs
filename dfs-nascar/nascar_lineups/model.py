@@ -22,7 +22,7 @@ class Model:
 
     def test(self, X_test, y_test):
         X_test['preds'] = self.model.predict(X_test.drop(columns='name'))
-        
+
         self.performance = mean_squared_error(y_test, X_test['preds'])**0.5
         self.predictions = X_test[['name', 'salary', 'preds']]
     
