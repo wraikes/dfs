@@ -89,7 +89,7 @@ for col in model[1]:
     if col not in df.columns:
         df[col] = 0
         
-df['preds'] = (model[0].predict(df[model[1]]) + df['fppg']) / 2
+df['preds'] = model[0].predict(df[model[1]])
 
 # get predictions
 opt = Optimizer(df)
@@ -97,3 +97,4 @@ opt.solve()
 opt.get_lineup()
 
 print(opt.lineup)
+print(df[['name', 'preds']])
