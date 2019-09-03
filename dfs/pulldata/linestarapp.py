@@ -1,8 +1,10 @@
 import json
 import requests
+import boto3
 
 class DataPull:
     
+    dynamodb = boto3.resource('dynamodb')
     parameters = {
         'nascar': {{
             'sport': 9,
@@ -37,6 +39,7 @@ class DataPull:
         
         self.pid_end = pid_end
         self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site=2&periodId='.format(self.sport)
+        self.table = dynamodb.Table('dfs-{}'.format(sport))
         
 
     def pull_json_data(self):
@@ -44,6 +47,14 @@ class DataPull:
         for pid in range(self.start_pid, self.pid_end + 1):
             html = self.html + str(pid)
             page = requests.get(html).content.decode() 
-            data = json.loads(page)
-            #save to appropriate dynamodb
-    
+            
+            #storing json data as string in dynamodb circumvents the need to
+            #convert float to decimal, and remove empty attribute values.
+            data = {
+                'pid': pid,
+                'data': page
+            }
+
+            self.table.put_item(
+               Item=data
+            )
