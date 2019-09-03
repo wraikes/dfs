@@ -4,41 +4,31 @@ import requests
 class DataPull:
     
     parameters = {
-        'nascar': {
-            {
-                'sport': 9,
-                'pid_start': 209
-            }
-            
-        'pga': {
-            {
-                'sport': 5,
-                'pid_start': 112
-            }
-            
-        'nhl': {
-            {
-                'sport': 6,
-                'pid_start': 338
-            }    
+        'nascar': {{
+            'sport': 9,
+            'pid_start': 209
+        },
+        'pga': {{
+            'sport': 5,
+            'pid_start': 112
+        },
+        'nhl': {{
+            'sport': 6,
+            'pid_start': 338
+        },
+        'nba': {{
+            'sport': 2,
+            'pid_start': 304
+        },
+        'nfl': {{
+            'sport': 1,
+            'pid_start': 81
+        }
 
-        'nba': {
-            {
-                'sport': 2,
-                'pid_start': 304
-            }
-
-        'nfl': {
-            {
-                'sport': 1,
-                'pid_start': 81
-            }
-
-        'mlb': {
-            {
-                'sport': 3,
-                'pid_start': 550
-            }
+        'mlb': {{
+            'sport': 3,
+            'pid_start': 550
+        }
     }
     
     def __init__(self, sport, pid_end):
