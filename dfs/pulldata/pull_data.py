@@ -5,6 +5,7 @@ import boto3
 class LinestarappData:
     
     s3 = boto3.resource('s3')
+    bucket = 'my-dfs-data'
     parameters = {
         'nascar': {
             'sport': 9,
@@ -39,7 +40,6 @@ class LinestarappData:
         self.pid_start = self.parameters[sport]['pid_start']
 
         self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site=2&periodId='.format(self.sport_id)
-        self.bucket = 'my-dfs-data'
         self.folder = '{}/linestarapp'.format(sport)
 
 
@@ -59,9 +59,6 @@ class LinestarappData:
 
 
     def update_data(self, projections=False):
-        # look at most recent pull pid
-        # loop thru pid's and pull until reach stopped point based on what was pulled
-            # save to appropriate s3
         bucket = self.s3.Bucket(self.bucket)
             
         max_pid = 0
@@ -95,10 +92,63 @@ class FantasyNerd:
 
 
 class SportsLine:
-    pass
+    
+    s3 = boto3.resource('s3')
+    bucket = 'my-dfs-data'
 
+    login = 'https://secure.sportsline.com/login'
+    payload = {
+        'dummy::login_form': '1',
+        'form::login_form': 'login_form',
+        'xurl': 'http://secure.sportsline.com/',
+        'master_product': '23350',
+        'vendor': 'sportsline',
+        'form_location': 'log_in_page',
+        'userid': '*', 
+        'password': '*'
+    }
+    
+    
+    def __init__(self, sport):
+        self.sport = sport #confined to nhl, nascar, nfl, golf, nba, mlb
+        self.articles = 'https://www.sportsline.com/sportsline-web/service/v1/articleIndexContent?slug={}&limit=10000&auth=1'.format(self.sport)
+        self.url = 'https://www.sportsline.com/sportsline-web/service/v1/articles/{}?auth=1'
+        self.folder = '{}/sportsline'.format(sport)
+    
+    
+    def _get_links(self):
+        page = json.loads(requests.get(self.articles).content.decode())
+        links = []
+        
+        for article in page['articles']:
+            art = article['slug']
+            
+            #nascar specific, need to modify for other sports
+            if art.endswith('from-a-dfs-pro') or art.startswith('nascar-at') or art.startswith('projected-nascar-leaderboard'):
+                links.append(article['slug'])
+            
+        return links
 
+        
+    def articles_to_s3(self):
 
+        links = self._get_links()
+        #TO DO: check to see which links are not in s3
+        
+        with requests.Session() as session:
+            post = session.post(self.login, data=self.payload)
+            
+            for link in links:
+                article = self.url.format(link)
+                page = session.get(article)
+            
+                obj = self.s3.Object(self.bucket, '{}/{}'.format(self.folder, link))
+                obj.put(
+                    Body=(page.text)
+                )
+    
+                print(link)  
+    
 
 if __name__ == '__main__':
     sports = {
