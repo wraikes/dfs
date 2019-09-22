@@ -33,13 +33,15 @@ class LinestarappData:
         }
     }
     
-    
-    def __init__(self, sport):
+
+    def __init__(self, sport, site='fd'):
         self.sport = sport
+        self.name = site #'fd' or 'dk' only
+        self.site = 2 if site == 'fd' else 1
         self.sport_id = self.parameters[sport]['sport']
         self.pid_start = self.parameters[sport]['pid_start']
 
-        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site=2&periodId='.format(self.sport_id)
+        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId='.format(self.sport_id, self.site)
         self.folder = '{}/linestarapp'.format(sport)
 
 
@@ -50,7 +52,13 @@ class LinestarappData:
             page = requests.get(html).content.decode() 
             data = json.loads(page)
             
-            obj = self.s3.Object(self.bucket, '{}/{}.json'.format(self.folder, pid))
+            sum_pts = sum([x['PS'] for x in data['Ownership']['Salaries']])
+            if sum_pts != 0:
+                name = '{}/{}_{}.json'.format(self.folder, self.name, pid)
+            else:
+                name = '{}/{}_{}_projections.json'.format(self.folder, self.name, pid)
+            
+            obj = self.s3.Object(self.bucket, name)
             obj.put(
                 Body=(json.dumps(data))
             )
@@ -58,18 +66,39 @@ class LinestarappData:
             print(pid)
 
 
-    def update_data(self, projections=False):
+    def update_data(self):
         bucket = self.s3.Bucket(self.bucket)
-            
+
         max_pid = 0
         for obj in bucket.objects.all():
             if self.sport in obj.key and 'json' in obj.key:
-                pid = int(obj.key.split('/')[-1].split('.')[0])
-                if pid > max_pid:
-                    max_pid = pid
-        
-        if projections:
-            max_pid -= 1
+                if 'projections' in obj.key:
+
+                    pid = int(obj.key.split('/')[-1].split('.')[0].split('_')[1])
+                    html = self.html + str(pid)
+                    
+                    if pid > max_pid:
+                        max_pid = pid
+                    
+                    page = requests.get(html).content.decode()
+                    data = json.loads(page)
+                    sum_pts = sum([x['PS'] for x in data['Ownership']['Salaries']])
+                    
+                    if sum_pts == 0:
+                        continue
+
+                    new_obj = self.s3.Object(self.bucket, '{}/{}_{}.json'.format(self.folder, self.name, max_pid))
+                    
+                    new_obj.put(
+                        Body=(json.dumps(data))
+                    )    
+                    self.s3.Object('my-dfs-data', obj.key).delete()
+                
+                else:
+                    pid = int(obj.key.split('/')[-1].split('.')[0].split('_')[1])
+                
+                    if max_pid < pid:
+                        max_pid = pid
             
         while True:
             max_pid += 1
@@ -79,7 +108,7 @@ class LinestarappData:
                 break
             
             data = json.loads(page)
-            obj = self.s3.Object(self.bucket, '{}/{}.json'.format(self.folder, max_pid))
+            obj = self.s3.Object(self.bucket, '{}/{}_{}.json'.format(self.folder, self.name, max_pid))
             obj.put(
                 Body=(json.dumps(data))
             )
@@ -130,11 +159,10 @@ class SportsLine:
         return links
 
         
-    def articles_to_s3(self):
+    def historical_articles_pull(self):
 
         links = self._get_links()
-        #TO DO: check to see which links are not in s3
-        
+            
         with requests.Session() as session:
             post = session.post(self.login, data=self.payload)
             
@@ -149,6 +177,32 @@ class SportsLine:
     
                 print(link)  
     
+    
+    def update_articles(self):
+
+        links = self._get_links()
+        bucket = self.s3.Bucket(self.bucket)
+
+        for obj in bucket.objects.all():
+            if 'sportsline' in obj.key and self.sport in obj.key:
+                key = obj.key.split('/')[-1]
+                if key in links:
+                    links.remove(key)
+        
+        with requests.Session() as session:
+            post = session.post(self.login, data=self.payload)
+
+            for link in links:
+                article = self.url.format(link)
+                page = session.get(article)
+            
+                obj = self.s3.Object(self.bucket, '{}/{}'.format(self.folder, link))
+                obj.put(
+                    Body=(page.text)
+                )
+    
+                print(link) 
+                
 
 if __name__ == '__main__':
     sports = {
@@ -162,5 +216,5 @@ if __name__ == '__main__':
     
     for key, value in sports.items():
         print(key)
-        data = LinestarappData(key, value)
-        data.pull_json_data()
+        data = LinestarappData(key, site='fd')
+        data.pull_historical_data(value)
