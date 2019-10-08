@@ -71,18 +71,18 @@ class LinestarappData:
         #delete projections data
         self._delete_projections()
 
-        #get_max_pid
+        #get starting pid reference number for html download
         pid = self._get_max_pid() + 1
         
         #pull new json data and save to s3
         while True:
             data = self._pull_json_data(pid)
             
-            #if data is short, it indicates that data isn't up yet.
+            #if json dict is small, it indicates stopping point for downloads
             if len(str(data)) < 10000:
                 break
             
-            #check if projections and save as such
+            #check if projections data and name as such
             if self._check_projection(data):
                 object_name = '{}/{}_{}_projections.json'.format(self.folder, self.site, pid)
             else:
@@ -143,8 +143,6 @@ class LinestarappData:
         pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
         return pid
-
-
 
 
 
