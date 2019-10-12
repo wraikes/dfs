@@ -79,7 +79,7 @@ class LinestarappData:
             data = self._pull_json_data(pid)
             
             #if json dict is small, it indicates stopping point for downloads
-            if len(str(data)) < 10000:
+            if len(str(data)) < 10000:  #######is this accurate for all sports?
                 break
             
             #check if projections data and name as such
