@@ -9,7 +9,7 @@ import psycopg2
 from sql_queries import *
 
 cfg = configparser.ConfigParser()
-cfg.read('../database_creds.ini')
+cfg.read('../../database_creds.ini')
 dbname = cfg['PGCONNECT']['dbname']
 host = cfg['PGCONNECT']['host']
 port = cfg['PGCONNECT']['port']
