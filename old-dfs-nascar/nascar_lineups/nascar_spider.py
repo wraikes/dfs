@@ -6,7 +6,7 @@ class NascarSpider(scrapy.Spider):
     name = "projections"
 
     def start_requests(self):
-        start_urls = ['file:///home/ubuntu/environment/dfs-nascar/dfs-nascar/current_projections']
+        start_urls = ['file:///home/ubuntu/environment/dfs/dfs-nascar/current_projections']
             
         for url in start_urls:
             yield scrapy.Request(url=url, callback=self.parse)
