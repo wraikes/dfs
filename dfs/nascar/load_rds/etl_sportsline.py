@@ -47,32 +47,54 @@ def _sportsline_leaderboard_data(file):
     return cache
 
 
+def _clean_positions_dfs_pro(positions, dk):
+    new = []
+    for pos in positions:
+        pos = pos.replace('D\t', '').replace('\t', '')
+        pos = re.sub(r'\<.+\>', '', pos)
+        pos = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
+        if pos:
+            new.append(pos)
+            
+    if not dk:
+        new = new[5:] + new[0:5]
+    
+    return new
+
+
 def _sportsline_dfs_pro_data(file):
     cache = {}
+    positions = []
+    dk = True
     
     cache['title'] = file['details']['title']
     cache['date'] = file['details']['content_date']
-    
-    positions = []
-    try:
-        positions = [x.split('<br>')[0] for x in file['details']['body'].split('\t')[1:]]
-    except:
-        pass
-    
-    if len(positions) < 5:
-        try:
-            positions = [x for x in file['details']['body'].split('</strong></p><p>')[1].split('</p><p>') if not x.startswith('<em>')]
-        except:
-            pass
-        
-    if len(positions) < 5:
-        try:
-            positions = [x for x in data['details']['body'].split('<br>') if '$' in x][1:]
-        except:
-            pass
-        
+    text = file['details']['body']
+    if '<strong>DraftKings' in text:
+        if '<strong>FanDuel' in text:
+            if text.find('<strong>FanDuel') > text.find('<strong>DraftKings'):
+                tmp_cache = text.split('<strong>DraftKings')[1].split('<strong>FanDuel')
+            else:
+                dk = False
+                tmp_cache = text.split('<strong>FanDuel')[1].split('<strong>DraftKings')
+        else:
+            tmp_cache = [text.split('<strong>DraftKings')[1]]
+    else:
+        tmp_cache = text.split('</strong></p><p>')[1:]
+    if '<br>' in tmp_cache[0]:
+        positions += tmp_cache[0].split('<br>')
+    else:
+        positions += tmp_cache[0].split('</p><p>')
+    if len(tmp_cache) > 1:
+        if '<br>' in tmp_cache[1]:
+            positions += tmp_cache[1].split('<br>')
+        else:
+            positions += tmp_cache[1].split('</p><p>')
+
+    positions = _clean_positions_dfs_pro(positions, dk)
+
     for i, pos in enumerate(positions):
-        cache['pos_{}'.format(i+1)] = pos
+        cache['pos_{}'.format(i+1)] = pos[0].strip()
 
     return cache
     
@@ -85,8 +107,19 @@ def _sportsline_betting_data(file):
     
     positions = [x.split(' -')[0].split('</str')[0] for x in file['details']['body'].split('#')[1:]]
     
-    for i, pos in enumerate(positions):
-        cache['pos_{}'.format(i+1)] = pos
+    new_pos = []
+    for pos in positions:
+        pos = pos.replace('/', '-')
+        pos = re.sub(r'/d+ ', '', pos)
+        pos_ = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
+        pos_odds = re.findall(r'\d+-\d+', pos)
+        pos_ += pos_odds
+        if pos_:
+            new_pos.append(pos_)
+        
+    for i, pos in enumerate(new_pos):
+        cache['pos_{}'.format(i+1)] = pos[0].strip()
+        cache['pos_{}_odds'.format(i+1)] = pos[-1]
 
     return cache
     
@@ -135,7 +168,27 @@ def _insert_sportsline_betting(cur, link, data):
         data['pos_17'] if 'pos_17' in data.keys() else None,
         data['pos_18'] if 'pos_18' in data.keys() else None,
         data['pos_19'] if 'pos_19' in data.keys() else None,
-        data['pos_20'] if 'pos_20' in data.keys() else None
+        data['pos_20'] if 'pos_20' in data.keys() else None,
+        data['pos_1_odds'] if 'pos_1_odds' in data.keys() else None,
+        data['pos_2_odds'] if 'pos_2_odds' in data.keys() else None,
+        data['pos_3_odds'] if 'pos_3_odds' in data.keys() else None,
+        data['pos_4_odds'] if 'pos_4_odds' in data.keys() else None,
+        data['pos_5_odds'] if 'pos_5_odds' in data.keys() else None,
+        data['pos_6_odds'] if 'pos_6_odds' in data.keys() else None,
+        data['pos_7_odds'] if 'pos_7_odds' in data.keys() else None,
+        data['pos_8_odds'] if 'pos_8_odds' in data.keys() else None,
+        data['pos_9_odds'] if 'pos_9_odds' in data.keys() else None,
+        data['pos_10_odds'] if 'pos_10_odds' in data.keys() else None,
+        data['pos_11_odds'] if 'pos_11_odds' in data.keys() else None,
+        data['pos_12_odds'] if 'pos_12_odds' in data.keys() else None,
+        data['pos_13_odds'] if 'pos_13_odds' in data.keys() else None,
+        data['pos_14_odds'] if 'pos_14_odds' in data.keys() else None,
+        data['pos_15_odds'] if 'pos_15_odds' in data.keys() else None,
+        data['pos_16_odds'] if 'pos_16_odds' in data.keys() else None,
+        data['pos_17_odds'] if 'pos_17_odds' in data.keys() else None,
+        data['pos_18_odds'] if 'pos_18_odds' in data.keys() else None,
+        data['pos_19_odds'] if 'pos_19_odds' in data.keys() else None,
+        data['pos_20_odds'] if 'pos_20_odds' in data.keys() else None
     )
 )
 

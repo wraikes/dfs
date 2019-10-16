@@ -64,7 +64,7 @@ def sportsline_main(cur):
             file = s3.Object('my-dfs-data', obj.key)
             data = file.get()['Body'].read()
             data = json.loads(data)
-        print(link)        
+                
         if 'leaderboard' in link: 
             data = _sportsline_leaderboard_data(data)
             _insert_sportsline_leaderboard(cur, link, data)

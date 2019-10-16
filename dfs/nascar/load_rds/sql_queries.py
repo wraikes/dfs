@@ -53,7 +53,27 @@ nascar_sportsline_betting_create_table = '''
         pos_17 VARCHAR,
         pos_18 VARCHAR,
         pos_19 VARCHAR,
-        pos_20 VARCHAR
+        pos_20 VARCHAR,
+        pos_1_odds VARCHAR,
+        pos_2_odds VARCHAR,
+        pos_3_odds VARCHAR,
+        pos_4_odds VARCHAR,
+        pos_5_odds VARCHAR,
+        pos_6_odds VARCHAR,
+        pos_7_odds VARCHAR,
+        pos_8_odds VARCHAR,
+        pos_9_odds VARCHAR,
+        pos_10_odds VARCHAR,
+        pos_11_odds VARCHAR,
+        pos_12_odds VARCHAR,
+        pos_13_odds VARCHAR,
+        pos_14_odds VARCHAR,
+        pos_15_odds VARCHAR,
+        pos_16_odds VARCHAR,
+        pos_17_odds VARCHAR,
+        pos_18_odds VARCHAR,
+        pos_19_odds VARCHAR,
+        pos_20_odds VARCHAR
     )
 '''
 
@@ -61,10 +81,15 @@ nascar_sportsline_betting_insert = '''
     INSERT INTO nascar_sportsline_betting (
         link, title, date, pos_1, pos_2, pos_3, pos_4, pos_5, pos_6, pos_7, pos_8,
         pos_9, pos_10, pos_11, pos_12, pos_13, pos_14, pos_15, pos_16, pos_17,
-        pos_18, pos_19, pos_20
+        pos_18, pos_19, pos_20,
+        pos_1_odds, pos_2_odds, pos_3_odds, pos_4_odds, pos_5_odds, pos_6_odds, 
+        pos_7_odds, pos_8_odds, pos_9_odds, pos_10_odds, pos_11_odds, 
+        pos_12_odds, pos_13_odds, pos_14_odds, pos_15_odds, pos_16_odds, 
+        pos_17_odds, pos_18_odds, pos_19_odds, pos_20_odds
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
 '''
 
