@@ -11,27 +11,7 @@ from etl_sportsline import _sportsline_betting_data
 from etl_sportsline import _insert_sportsline_betting
 from etl_sportsline import _sportsline_dfs_pro_data
 from etl_sportsline import _insert_sportsline_dfs_pro
-
-def connect_to_database():
-    cfg = configparser.ConfigParser()
-    cfg.read('../../database_creds.ini')
-    
-    dbname = cfg['PGCONNECT']['dbname']
-    host = cfg['PGCONNECT']['host']
-    port = cfg['PGCONNECT']['port']
-    user = cfg['PGCONNECT']['user']
-    password = cfg['PGCONNECT']['password']
-    
-    conn = psycopg2.connect(
-        dbname=dbname, 
-        host=host, 
-        port=port, 
-        user=user, 
-        password=password
-    )
-    conn.autocommit = True
-
-    return conn.cursor()
+from database_connection import connect_to_database
 
 
 

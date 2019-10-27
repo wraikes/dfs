@@ -22,8 +22,8 @@ def _clean_positions_leaderboard(positions):
 def _sportsline_leaderboard_data(file):
     cache = {}
 
-    cache['title'] = file['metaData']['headline']
-    cache['date'] = file['metaData']['timestamp']
+    cache['title'] = file['details']['title']
+    cache['date'] = file['details']['content_date']
     
     tmp_cache = file['metaData']['body'].split(':</strong></p>')
     if '<br>' in tmp_cache[1]:
@@ -70,6 +70,7 @@ def _sportsline_dfs_pro_data(file):
     cache['title'] = file['details']['title']
     cache['date'] = file['details']['content_date']
     text = file['details']['body']
+    
     if '<strong>DraftKings' in text:
         if '<strong>FanDuel' in text:
             if text.find('<strong>FanDuel') > text.find('<strong>DraftKings'):
