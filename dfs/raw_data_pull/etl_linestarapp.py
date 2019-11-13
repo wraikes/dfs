@@ -93,7 +93,7 @@ class LinestarappData:
     def _delete_projections(self):
         '''If s3 object is a projection, delete object'''
         for obj in self.bucket.objects.all():
-            if self.sport in obj.key and 'json' in obj.key and 'projections' in obj.key:
+            if self.sport in obj.key and 'json' in obj.key and 'projections' in obj.key and self.site in obj.key:
         
                 #delete old projections data
                 self.s3.Object('my-dfs-data', obj.key).delete()  
@@ -104,7 +104,7 @@ class LinestarappData:
         max_pid = self.pid_start
         
         for obj in self.bucket.objects.all():
-            if self.sport in obj.key and 'json' in obj.key:
+            if self.sport in obj.key and 'json' in obj.key and self.site in obj.key:
                 pid = self._get_pid(obj.key)
                 
                 if max_pid < pid:
@@ -134,8 +134,3 @@ class LinestarappData:
         pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
         return pid
-
-
-
-
-

@@ -18,7 +18,7 @@ class SportslineData:
 
     #load config parameters for sportsline
     cfg = configparser.ConfigParser()
-    cfg.read('etl_sportsline.ini')
+    cfg.read('./raw_data_pull/etl_sportsline.ini')
     user_id = cfg['SPORTSLINE']['user_id']
     password = cfg['SPORTSLINE']['password']
 
@@ -37,7 +37,7 @@ class SportslineData:
     
     
     def __init__(self, sport):
-        self.sport = sport #confined to nhl, nascar, nfl, golf, nba, mlb
+        self.sport = sport if sport != 'pga' else 'golf' #confined to nhl, nascar, nfl, pga, nba, mlb
         self.articles = 'https://www.sportsline.com/sportsline-web/service/v1/articleIndexContent?slug={}&limit=10000&auth=1'.format(self.sport)
         self.url = 'https://www.sportsline.com/sportsline-web/service/v1/articles/{}?auth=1'
         self.folder = '{}/sportsline'.format(sport)
@@ -51,12 +51,14 @@ class SportslineData:
         for article in page['articles']:
             title = article['slug']
             
-            ##################################################
-            #nascar specific, need to modify for other sports
-            ##################################################
-            if title.endswith('from-a-dfs-pro') or title.startswith('nascar-at') or title.startswith('projected-nascar-leaderboard'):
-                links.append(article['slug'])
-            
+            if self.sport == 'nascar':
+                if title.endswith('from-a-dfs-pro') or title.startswith('nascar-at') or title.startswith('projected-nascar-leaderboard'):
+                    links.append(article['slug'])
+
+            elif self.sport == 'golf':
+                if title.endswith('from-a-dfs-pro') or title.endswith('has-surprising-picks-and-predictions'):
+                    links.append(article['slug'])
+                    
         return links
     
     
@@ -66,11 +68,17 @@ class SportslineData:
         bucket = self.s3.Bucket(self.bucket_name)
 
         for obj in bucket.objects.all():
-            if 'sportsline' in obj.key and self.sport in obj.key:
-                key = obj.key.split('/')[-1]
-                if key in links:
-                    links.remove(key)
-                    
+            if self.sport != 'golf':
+                if 'sportsline' in obj.key and self.sport in obj.key:
+                    key = obj.key.split('/')[-1]
+                    if key in links:
+                        links.remove(key)
+            else:
+                if 'sportsline' in obj.key and 'pga' in obj.key:
+                    key = obj.key.split('/')[-1]
+                    if key in links:
+                        links.remove(key)
+                
         #Open session and post the user_id and password
         with requests.Session() as session:
             post = session.post(self.login, data=self.payload)
@@ -88,4 +96,3 @@ class SportslineData:
                 )
     
                 print(link) 
-

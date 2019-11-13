@@ -1,30 +1,18 @@
 import pandas as pd
 import numpy as np
-import boto3
 
-def prep_data():
-    bucket = 'my-dfs-data'
-    file_name = "training_data/nascar.csv"
+def prep_data(df):
 
-    s3 = boto3.client('s3') 
-    obj = s3.get_object(Bucket= bucket, Key= file_name) 
-    df = pd.read_csv(obj['Body']) 
-
-    cols = [x for x in df.count().index if df.count()[x] == 0]
-    df = df.drop(columns=cols)
-    df = df.fillna(0)
-    
-    df['names'] = df['name']
-    df = pd.get_dummies(df, columns=['names', 'surface', 'restrictor_plate'])
-    
     drop_cols = [
+        'laps',
+        'miles',
         'primary_id',
         'race_id',
         's',
-        'race_date',
         'player_id',
         'pos',
         'gid',
+        'gi',
         'ss',
         'stat',
         'is_',
@@ -35,24 +23,99 @@ def prep_data():
         'ptid',
         'otid',
         'htid',
+        'oe',
         'opprank',
         'opptotal',
         'dspid',
         'dgid',
+        'img',
+        'pteam',
+        'hteam',
+        'oteam',
         'lock',
         'id',
         'salaryid',
-        'owned', #might be projected owned
-        'link_lead',
-        'title_lead',
-        'date_x',
-        'pos_lead',
+        'owned',
+        'lovecount',
+        'hatecount',
+        'link_leaderboard',
+        'title_leaderboard',
+        'date_leaderboard',
         'link_pro',
         'title_pro',
-        'date_y',
+        'date_pro',
         'link_betting',
         'title_betting',
-        'date'
+        'date_betting',
+        'surface',
+        'restrictor_plate',
     ]
     
-    return df.drop(columns=drop_cols)
+    df['names'] = df['name']
+    df = df.drop(columns=drop_cols)
+    df = pd.get_dummies(df, columns=['names'])
+    df['dfs_pick_dk'] = df['dfs_pick_dk'].fillna(0)
+    
+    for col in df.columns:
+        if col != 'name' and col != 'race_date':
+            df[col] = pd.to_numeric(df[col])
+
+    df = fill_na(df)
+
+    df['best_lap_time_pos'] = None
+    df['best_lap_speed_pos'] = None
+    df['best_lap_time_pos_diff'] = None
+    df['best_lap_speed_pos_diff'] = None
+    
+    df['best_lap_time_diff'] = df['practice_best_lap_time'] - df['qualifying_best_lap_time']
+    df['best_lap_speed_diff'] = df['practice_best_lap_speed'] - df['qualifying_best_lap_speed']
+    
+    for date in df.race_date.unique():
+        df.loc[df.race_date==date, 'best_lap_time_pos'] = df.loc[df.race_date==date, 'practice_best_lap_time'].rank()
+        df.loc[df.race_date==date, 'best_lap_speed_pos'] = df.loc[df.race_date==date, 'practice_best_lap_speed'].rank()
+        df.loc[df.race_date==date, 'best_lap_time_pos_diff'] = df.loc[df.race_date==date, 'practice_best_lap_time'] - df.loc[df.race_date==date, 'practice_best_lap_time'].min()
+        df.loc[df.race_date==date, 'best_lap_speed_pos_diff'] = df.loc[df.race_date==date, 'practice_best_lap_speed'] - df.loc[df.race_date==date, 'practice_best_lap_speed'].min()
+    
+    for col in df.columns:
+        if 'names_' in col:
+            df[col] = df[col] * df['cautions_race']
+    
+    df['interaction'] = df['qualifying_pos'] * df['best_lap_time_pos_diff']
+    
+    return df.drop(columns=['race_date', 'cautions_race'])
+
+
+def fill_na(df):
+    bet_grp = df.groupby('name').pos_betting.mean()
+    odds_grp = df.groupby('name').pos_odds_betting.mean()
+    lead_grp = df.groupby('name').pos_leaderboard.mean()
+    note = df.groupby('name').note_pos.mean()    
+    
+    for date in df.race_date.unique():
+        tmp = df[df.race_date==date]
+        
+        betting = tmp.pos_betting.max()
+        lead = tmp.pos_leaderboard.max()
+        note_pos = tmp.note_pos.max()
+        
+        if not np.isnan(betting):
+            df.loc[(df['race_date']==date)&(df['pos_betting']).isnull(), 'pos_betting'] = betting
+            df.loc[(df['race_date']==date)&(df['pos_betting']).isnull(), 'pos_odds_betting'] = 0
+        else:
+            for name in tmp.name.unique():
+                df.loc[(df['race_date']==date)&(df['name']==name), 'pos_betting'] = bet_grp[name]
+                df.loc[(df['race_date']==date)&(df['name']==name), 'pos_odds_betting'] = odds_grp[name]
+            
+        if not np.isnan(lead):
+            df.loc[(df['race_date']==date)&(df['pos_leaderboard']).isnull(), 'pos_leaderboard'] = lead
+        else:
+            for name in tmp.name.unique():
+                df.loc[(df['race_date']==date)&(df['name']==name), 'pos_leaderboard'] = lead_grp[name]
+                
+        if not np.isnan(note_pos):
+            df.loc[(df['race_date']==date)&(df['note_pos']).isnull(), 'note_pos'] = note_pos
+        else:
+            for name in tmp.name.unique():
+                df.loc[(df['race_date']==date)&(df['name']==name), 'note_pos'] = note[name]
+            
+    return df

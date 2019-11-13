@@ -4,8 +4,9 @@ import numpy as np
 
 
 class Optimizer:
-    def __init__(self, df):
+    def __init__(self, df, site):
         self.df = df
+        self.site = site
         
         self.salaries = self.df[['name', 'salary']].set_index('name').to_dict()['salary']
         self.points = self.df[['name', 'preds']].set_index('name').to_dict()['preds']
@@ -25,7 +26,10 @@ class Optimizer:
 
         self.optimizer += pulp.lpSum(self.rewards)
         self.optimizer += pulp.lpSum(self.costs) <= 50000
-        self.optimizer += pulp.lpSum(self.total_drivers) <= 5
+        if self.site == 'dk':
+            self.optimizer += pulp.lpSum(self.total_drivers) == 6
+        else:
+            self.optimizer += pulp.lpSum(self.total_drivers) == 5
         self.optimizer.solve()
 
 

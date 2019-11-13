@@ -1,10 +1,13 @@
 import boto3
 import json
+import re
 import pandas as pd
 import configparser
 import psycopg2
+from datetime import datetime
 
 class LinestarappETL:
+    
     def __init__(self):
         pass
 
@@ -16,15 +19,7 @@ class LinestarappETL:
         data_cache = self._linestarapp_matchup_data(data_cache, json_data)
         data_cache = self._linestarapp_ownership_data(data_cache, json_data)
     
-    
-        df = pd.DataFrame.from_dict(
-            {(i,j): data_cache[i][j] 
-            for i in data_cache.keys() 
-            for j in data_cache[i].keys()},
-            orient='index'
-        )
-    
-        return df
+        return data_cache
     
 
     def _linestarapp_salary_data(self, data_cache, json_data):
@@ -34,6 +29,15 @@ class LinestarappETL:
         
         for player_data in json_data['Ownership']['Salaries']:
             player_id = player_data['PID']
+            player_data['GT'] = datetime.strptime(player_data['GT'].split('T')[0], '%Y-%m-%d')
+            
+            notes = [x['Note'] for x in eval(player_data['Notes']) if 'Qualified' in x['Note']]
+            if notes:
+                value = re.findall('\d+', notes[0].split(',')[1])[0]
+                player_data['note_pos'] = int(value)
+            else:
+                player_data['note_pos'] = None
+                
             new_cache[race_id][player_id] = player_data
     
         return new_cache
@@ -91,3 +95,5 @@ class LinestarappETL:
                             
         return new_cache
         
+
+

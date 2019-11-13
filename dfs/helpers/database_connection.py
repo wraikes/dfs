@@ -4,7 +4,7 @@ import psycopg2
 
 def connect_to_database():
     cfg = configparser.ConfigParser()
-    cfg.read('../../database_creds.ini')
+    cfg.read('./helpers/database_creds.ini')
     
     dbname = cfg['PGCONNECT']['dbname']
     host = cfg['PGCONNECT']['host']

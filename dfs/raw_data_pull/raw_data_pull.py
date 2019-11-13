@@ -1,7 +1,7 @@
-from etl_sportsline import SportslineData
-from etl_linestarapp import LinestarappData
+from raw_data_pull.etl_sportsline import SportslineData
+from raw_data_pull.etl_linestarapp import LinestarappData
 
-def main(sport, site):
+def pull_data(sport, site):
     linestar = LinestarappData(sport, site)
     linestar.update_data()
     
@@ -10,6 +10,6 @@ def main(sport, site):
 
 
 if __name__ == '__main__':
-    main('nascar', 'fd')
+    pass
 
 
