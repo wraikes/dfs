@@ -4,7 +4,7 @@
 
 import sys
 
-from helpers.database_connection import connect_to_database
+from database_connection.database_connection import connect_to_database
 from raw_data_pull.raw_data_pull import pull_data
 
 from nascar.etl_pipeline import etl
@@ -17,32 +17,29 @@ from pga.etl.combine_data import create_table
 from pga.update_model import update_model
 from pga.projections import get_lineup
 
-def dfs(sport):
+def dfs(sport, update):
     cur = connect_to_database()
     
-    #update data
-    #pull_data(sport, 'fd')
-    #pull_data(sport, 'dk')
+    for site in ['fd', 'dk']:
+        #update data
+        if update==True:
+            pull_data(sport, site)
 
-    ### etl: s3 to rds
-    etl('sportsline', cur)
-    etl('linestarapp', cur)
+        ### etl: s3 to rds
+        etl(cur, sport)
     
-    ### combine all data to a saved rds table
-    df_fd = create_table(cur, 'fd', save=True)
-    df_dk = create_table(cur, 'dk', save=True)
+        ### combine all data to a saved rds table
+        df = create_table(cur, site, save=True)
         
-    #update model & save to s3
-    update_model(df_fd, 'fd')
-    update_model(df_dk, 'dk')
-    
-    #if projections exist, then get lineups
-    lineup_fd = get_lineup(cur, 'fd')
-    lineup_dk = get_lineup(cur, 'dk')
-    print('FanDuel {}'.format(lineup_fd))
-    print('DraftKings: {}'.format(lineup_dk))
+        #update model & save to s3
+        update_model(df, site)
+
+        #if projections exist, then get lineups
+        lineup = get_lineup(cur, site)
+        print('{}: {}'.format(site, lineup))
+
 
 
 if __name__ == '__main__':
-    dfs('pga')
+    dfs(sys.argv[1], sys.argv[2])
     
