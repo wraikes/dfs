@@ -12,16 +12,16 @@ def combine_data(linestar, sportsline):
             sportsline['name'] = sportsline['name'].str.replace('D ', '')
     
     for name in linestar.name.unique():
-        a = linestar[linestar.name==name].sort_values(by='race_date')
+        a = linestar[linestar.name==name].sort_values(by='date')
         
         date_col = [x for x in sportsline.columns if 'date_' in x][0]
         b = sportsline[sportsline.name==name].sort_values(by=date_col)
         
-        a['race_date'] = pd.to_datetime(a['race_date'])
+        a['date'] = pd.to_datetime(a['date'])
         b[date_col] = pd.to_datetime(b[date_col])
 
         tmp = pd.merge_asof(left=a, right=b.drop(columns=['name', 'primary_id']),
-                            left_on='race_date',
+                            left_on='date',
                             right_on=date_col,
                             direction='nearest',
                             tolerance=tol
@@ -45,7 +45,7 @@ def create_table(cursor, site, save=False):
         columns=[desc[0] for desc in cursor.description]
     )
     
-    cursor.execute("SELECT * FROM nascar_sportsline_dfs_pro")
+    cursor.execute("SELECT * FROM nascar_sportsline_pro")
     pro = pd.DataFrame(
         cursor.fetchall(), 
         columns=[desc[0] for desc in cursor.description]

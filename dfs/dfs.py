@@ -12,10 +12,10 @@ from nascar.etl.combine_data import create_table
 from nascar.update_model import update_model
 from nascar.projections import get_lineup
 
-from pga.etl_pipeline import etl
-from pga.etl.combine_data import create_table
-from pga.update_model import update_model
-from pga.projections import get_lineup
+#from pga.etl_pipeline import etl
+#from pga.etl.combine_data import create_table
+#from pga.update_model import update_model
+#from pga.projections import get_lineup
 
 def dfs(sport):
     cur = connect_to_database()
@@ -44,5 +44,5 @@ def dfs(sport):
 
 
 if __name__ == '__main__':
-    dfs('pga')
+    dfs('nascar')
     

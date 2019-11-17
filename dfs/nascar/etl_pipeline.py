@@ -26,7 +26,7 @@ def etl_sportsline(cur):
     cols = ['link_betting', 'link_pro', 'link_leaderboard']
     tables = [
         'nascar_sportsline_betting', 
-        'nascar_sportsline_dfs_pro',
+        'nascar_sportsline_pro',
         'nascar_sportsline_leaderboard'
     ]
     for col, table in zip(cols, tables):
@@ -70,7 +70,7 @@ def etl_sportsline(cur):
 
 def etl_linestarapp(cur, site):
         #pid's used to append new data
-    cur.execute('SELECT race_id FROM nascar_linestarapp_{}'.format(site))
+    cur.execute('SELECT event_id FROM nascar_linestarapp_{}'.format(site))
     pids = set(x[0] for x in cur.fetchall())
     
     #initialize bucket

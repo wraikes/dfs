@@ -13,19 +13,19 @@ def get_lineup(cur, site):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket('my-dfs-data')
 
-    # for obj in bucket.objects.filter(Prefix='{}/{}/{}_'.format('nascar', 'linestarapp', site)):
-    #     #skip objects if not projection data
-    #     if 'projections' not in obj.key:
-    #         continue
+    for obj in bucket.objects.filter(Prefix='{}/{}/{}_'.format('nascar', 'linestarapp', site)):
+        #skip objects if not projection data
+        if 'projections' not in obj.key:
+            continue
         
-    #     #pull file        
-    #     file = s3.Object('my-dfs-data', obj.key)
-    #     data = file.get()['Body'].read()
-    #     data = json.loads(data)
+        #pull file        
+        file = s3.Object('my-dfs-data', obj.key)
+        data = file.get()['Body'].read()
+        data = json.loads(data)
         
-    file = s3.Object('my-dfs-data', 'nascar/linestarapp/{}_272.json'.format(site))
-    data = file.get()['Body'].read()
-    data = json.loads(data)
+#    file = s3.Object('my-dfs-data', 'nascar/linestarapp/{}_272.json'.format(site))
+#    data = file.get()['Body'].read()
+#    data = json.loads(data)
     
     #transform file into usable dictionary
     etl = LinestarappETL()
@@ -37,7 +37,7 @@ def get_lineup(cur, site):
     
     line.columns = [
     's', 'player_id', 'name', 'pos', 'salary', 'gid',
-    'gi', 'race_date', 
+    'gi', 'date', 
     'ppg', 'pp', 'ps', 'ss', 'stat', 'is_', 'notes', 'floor', 'ceil', 'conf',
     'ptid', 'otid', 
     'htid', 'oe', 'opprank', 'opptotal', 'dspid', 'dgid', 'img', 'pteam', 
@@ -51,7 +51,7 @@ def get_lineup(cur, site):
     'wins_4', 'top_5s_4', 'top_10s_4', 'avg_place_4', 'salaryid', 'owned', 
     'hatecount', 'lovecount']
     
-    line['race_date'] = pd.to_datetime(pd.to_datetime(line['race_date'], utc=True).dt.date)    
+    line['date'] = pd.to_datetime(pd.to_datetime(line['date'], utc=True).dt.date)    
     
     cur.execute("SELECT * FROM nascar_sportsline_leaderboard")
     lead = pd.DataFrame(
@@ -67,7 +67,7 @@ def get_lineup(cur, site):
     )
     bet = bet[bet.date_betting == bet.date_betting.max()]
     
-    cur.execute("SELECT * FROM nascar_sportsline_dfs_pro")
+    cur.execute("SELECT * FROM nascar_sportsline_pro")
     pro = pd.DataFrame(
         cur.fetchall(), 
         columns=[desc[0] for desc in cur.description]

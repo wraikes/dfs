@@ -1,5 +1,5 @@
 nascar_sportsline_dfs_pro_insert = '''
-    INSERT INTO nascar_sportsline_dfs_pro (
+    INSERT INTO nascar_sportsline_pro (
         link_pro, title_pro, date_pro, name, dfs_pick_dk 
     ) VALUES (
         %s, %s, %s, %s, %s
@@ -26,7 +26,7 @@ nascar_sportsline_leaderboard_insert = '''
 
 nascar_linestarapp_insert_fd = '''
     INSERT INTO nascar_linestarapp_fd (
-        race_id, s, player_id, name, pos, salary, gid, gi, race_date, 
+        event_id, s, player_id, name, pos, salary, gid, gi, date, 
         ppg, pp, ps, ss, stat, is_, notes, floor, ceil, conf, ptid, otid, 
         htid, oe, opprank, opptotal, dspid, dgid, img, pteam, hteam, oteam, 
         lock, id, races, wins, top_fives, top_tens, avg_finish, 
@@ -48,7 +48,7 @@ nascar_linestarapp_insert_fd = '''
 
 nascar_linestarapp_insert_dk = '''
     INSERT INTO nascar_linestarapp_dk (
-        race_id, s, player_id, name, pos, salary, gid, gi, race_date, 
+        event_id, s, player_id, name, pos, salary, gid, gi, date, 
         ppg, pp, ps, ss, stat, is_, notes, floor, ceil, conf, ptid, otid, 
         htid, oe, opprank, opptotal, dspid, dgid, img, pteam, hteam, oteam, 
         lock, id, races, wins, top_fives, top_tens, avg_finish, 
