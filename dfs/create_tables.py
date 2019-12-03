@@ -7,6 +7,7 @@ from database_connection.database_connection import connect_to_database
 def create_table(sport, drop=False):
     cur = connect_to_database()
 
+    #should just drop all tables for a sport
     if drop:
         cur.execute(drop_linestarapp_table.format(sport, 'dk'))
         cur.execute(drop_linestarapp_table.format(sport, 'fd'))
@@ -22,8 +23,8 @@ def create_table(sport, drop=False):
             cur.execute(pga_linestarapp_create_table.format(site))        
     
     cur.execute(sportsline_pro_create_table.format(sport))
-    cur.execute(sportsline_leaderboard_create_table.format(sport))
-    cur.execute(sportsline_betting_create_table.format(sport))
+    cur.execute(sportsline_lead_create_table.format(sport))
+    cur.execute(sportsline_bet_create_table.format(sport))
 
 
 if __name__=='__main__':

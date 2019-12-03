@@ -19,27 +19,27 @@ sportsline_pro_create_table = '''
 '''
 
 #sportsline articles that have rankings only
-sportsline_leaderboard_create_table = '''
-    CREATE TABLE IF NOT EXISTS {}_sportsline_leaderboard (
+sportsline_lead_create_table = '''
+    CREATE TABLE IF NOT EXISTS {}_sportsline_lead (
         primary_id SERIAL PRIMARY KEY,
-        link_leaderboard VARCHAR,
-        title_leaderboard VARCHAR,
-        date_leaderboard VARCHAR,
+        link_lead VARCHAR,
+        title_lead VARCHAR,
+        date_lead VARCHAR,
         name VARCHAR,
-        pos_leaderboard INT
+        pos_lead INT
     )
 '''
 
 #sportsline articles that have rankings and odds
-sportsline_betting_create_table = '''
-    CREATE TABLE IF NOT EXISTS {}_sportsline_betting (
+sportsline_bet_create_table = '''
+    CREATE TABLE IF NOT EXISTS {}_sportsline_bet (
         primary_id SERIAL PRIMARY KEY,
-        link_betting VARCHAR,
-        title_betting VARCHAR,
-        date_betting VARCHAR,
+        link_bet VARCHAR,
+        title_bet VARCHAR,
+        date_bet VARCHAR,
         name VARCHAR,
-        pos_betting INT,
-        pos_odds_betting FLOAT
+        pos_bet INT,
+        pos_odds_bet FLOAT
     )
 '''
 

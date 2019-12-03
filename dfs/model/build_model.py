@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import pickle
 
-from pga.model.prep_data import prep_data
+from pga.prep_data import prep_data
 
 class Model:
     def __init__(self, model, params, df):
@@ -17,6 +17,8 @@ class Model:
     
     def _prep_data(self):
         self.df = prep_data(self.df)
+        self.df = self.df[self.df.projections=='false']
+        self.df.drop(columns='projections', inplace=True)
         self.df = self.df.fillna(0) #this should not be needed, should be in prep_data
         
     def train(self):
@@ -28,9 +30,9 @@ class Model:
         self.col_names = X.columns
         self.model.fit(X, y)
     
-    def save(self, site):
+    def save(self, sport, site):
         obj = pickle.dumps([self.model, self.col_names])
         
         s3 = boto3.resource('s3')
         bucket = s3.Bucket('my-dfs-data')
-        s3.Object(bucket.name, 'pga/modeling/model_{}.pkl'.format(site)).put(Body=obj)
+        s3.Object(bucket.name, '{}/modeling/model_{}.pkl'.format(sport, site)).put(Body=obj)

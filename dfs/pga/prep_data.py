@@ -5,7 +5,7 @@ def prep_data(df):
 
     drop_cols = [
         'primary_id',
-        'pga_id',
+        'event_id',
         's',
         'player_id',
         'pos',
@@ -35,41 +35,35 @@ def prep_data(df):
         'salaryid',
         'owned',
         'lovecount',
-        'hatecount',
-        'link_picks',
-        'title_picks',
-        'date_picks',
-        'link_pro',
-        'title_pro',
-        'date_pro'
+        'hatecount'
     ]
     
     df['names'] = df['name']
     df = df.drop(columns=drop_cols)
     df = pd.get_dummies(df, columns=['names'])
-    df['dfs_pick_dk'] = df['dfs_pick_dk'].fillna(0)
+    #df['dfs_pick_dk'] = df['dfs_pick_dk'].fillna(0)
     
     for col in df.columns:
-        if col != 'name' and col != 'pga_date':
+        if col != 'name' and col != 'date' and col != 'projections':
             df[col] = pd.to_numeric(df[col])
 
     df = fill_na(df)
     
-    return df.drop(columns=['pga_date'])
+    return df.drop(columns=['date'])
 
 
 def fill_na(df):
-    pick_grp = df.groupby('name').pos_picks.mean()
+    # pick_grp = df.groupby('name').pos_picks.mean()
     
-    for date in df.pga_date.unique():
-        tmp = df[df.pga_date==date]
+    # for date in df.pga_date.unique():
+    #     tmp = df[df.pga_date==date]
         
-        pick = tmp.pos_picks.max()
+    #     pick = tmp.pos_picks.max()
 
-        if not np.isnan(pick):
-            df.loc[(df['pga_date']==date)&(df['pos_picks']).isnull(), 'pos_picks'] = pick
-        else:
-            for name in tmp.name.unique():
-                df.loc[(df['pga_date']==date)&(df['name']==name), 'pos_picks'] = pick_grp[name]
+    #     if not np.isnan(pick):
+    #         df.loc[(df['pga_date']==date)&(df['pos_picks']).isnull(), 'pos_picks'] = pick
+    #     else:
+    #         for name in tmp.name.unique():
+    #             df.loc[(df['pga_date']==date)&(df['name']==name), 'pos_picks'] = pick_grp[name]
 
     return df

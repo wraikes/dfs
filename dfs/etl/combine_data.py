@@ -2,6 +2,7 @@ import boto3
 import pandas as pd
 from io import StringIO 
 
+from database_connection.database_connection import connect_to_database
 
 def combine_data(linestar, sportsline):
     new = pd.DataFrame()
@@ -32,46 +33,41 @@ def combine_data(linestar, sportsline):
     return new
 
 
-def create_table(cursor, site, save=False):
-    cursor.execute("SELECT * FROM pga_sportsline_picks")
-    picks = pd.DataFrame(
-        cursor.fetchall(), 
-        columns=[desc[0] for desc in cursor.description]
-    )
+def create_dataframe(sport, site, save=False):
     
-    cursor.execute("SELECT * FROM pga_sportsline_dfs_pro")
-    pro = pd.DataFrame(
-        cursor.fetchall(), 
-        columns=[desc[0] for desc in cursor.description]
-    )
+    with connect_to_database() as cur:
+        # cursor.execute("SELECT * FROM pga_sportsline_picks")
+        # picks = pd.DataFrame(
+        #     cursor.fetchall(), 
+        #     columns=[desc[0] for desc in cursor.description]
+        # )
+        
+        # cursor.execute("SELECT * FROM pga_sportsline_dfs_pro")
+        # pro = pd.DataFrame(
+        #     cursor.fetchall(), 
+        #     columns=[desc[0] for desc in cursor.description]
+        # )
     
-    if site == 'fd':
-        cursor.execute("SELECT * FROM pga_linestarapp_fd")
-        line = pd.DataFrame(
-            cursor.fetchall(), 
-            columns=[desc[0] for desc in cursor.description]
-        )
-    else:
-        cursor.execute("SELECT * FROM pga_linestarapp_dk")
-        line = pd.DataFrame(
-            cursor.fetchall(), 
-            columns=[desc[0] for desc in cursor.description]
+        cur.execute("SELECT * FROM {}_linestarapp_{}".format(sport, site))
+        linestar = pd.DataFrame(
+            cur.fetchall(), 
+            columns=[desc[0] for desc in cur.description]
         )
         
-    
-    df_1 = combine_data(line, picks)
-    df_2 = combine_data(df_1, pro)
+    df = linestar.copy()
+    #df_1 = combine_data(line, picks)
+    #df_2 = combine_data(df_1, pro)
 
     if save:
         s3 = boto3.resource('s3')
         bucket = s3.Bucket('my-dfs-data')
         
         csv_buffer = StringIO()
-        df_2.to_csv(csv_buffer, index=False)
-        s3.Object(bucket.name, 'pga/modeling/final_data_{}.csv'.format(site)).put(Body=csv_buffer.getvalue())
+        df.to_csv(csv_buffer, index=False)
+        s3.Object(bucket.name, '{}/modeling/final_data_{}.csv'.format(sport, site)).put(Body=csv_buffer.getvalue())
     
-        return df_2
+        return df
     
     else:
-        return df_2
+        return df
 
