@@ -4,45 +4,38 @@
 
 import sys
 
-from helpers.database_connection import connect_to_database
 from raw_data_pull.raw_data_pull import pull_data
 
-from nascar.etl_pipeline import etl
-from nascar.etl.combine_data import create_table
-from nascar.update_model import update_model
-from nascar.projections import get_lineup
+from etl.etl_pipeline import etl
+from etl.combine_data import create_dataframe
+from model.update_model import update_model
+from predictions.projections import get_lineup
 
-#from pga.etl_pipeline import etl
-#from pga.etl.combine_data import create_table
-#from pga.update_model import update_model
-#from pga.projections import get_lineup
 
-def dfs(sport):
-    cur = connect_to_database()
+def dfs(sport, update):
+
+    for site in ['fd', 'dk']:
+        #update data
+        if update=='True':
+            pull_data(sport, site)
+
+        ### etl: s3 to rds
+        etl(sport, 'linestarapp')
+        #etl(sport, 'sportsline')
+        #if sport in ['nfl', 'nba', 'nhl', 'mlb']
+        #    etl(sport, 'nerd')
     
-    #update data
-    #pull_data(sport, 'fd')
-    #pull_data(sport, 'dk')
-
-    ### etl: s3 to rds
-    etl('sportsline', cur)
-    etl('linestarapp', cur)
-    
-    ### combine all data to a saved rds table
-    df_fd = create_table(cur, 'fd', save=True)
-    df_dk = create_table(cur, 'dk', save=True)
+        ### combine all data to a saved rds table
+        df = create_dataframe(sport, site, save=True)
         
-    #update model & save to s3
-    update_model(df_fd, 'fd')
-    update_model(df_dk, 'dk')
-    
-    #if projections exist, then get lineups
-    lineup_fd = get_lineup(cur, 'fd')
-    lineup_dk = get_lineup(cur, 'dk')
-    print('FanDuel {}'.format(lineup_fd))
-    print('DraftKings: {}'.format(lineup_dk))
+        #update model & save to s3
+        update_model(df, sport, site)
+
+        #if projections exist, then get lineups
+        lineup = get_lineup(df, sport, site)
+        print('{}: {}'.format(site, lineup))
+
 
 
 if __name__ == '__main__':
-    dfs('nascar')
-    
+    dfs(sys.argv[1], sys.argv[2])
