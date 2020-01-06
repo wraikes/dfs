@@ -16,6 +16,25 @@ class LinestarappData:
     s3 = boto3.resource('s3')
     bucket = s3.Bucket('my-dfs-data')
 
+    # #load config parameters for linestarapp
+    # cfg = configparser.ConfigParser()
+    # cfg.read('./raw_data_pull/etl.ini')
+    # user_id = cfg['CREDENTIALS']['user_id']
+    # password = cfg['CREDENTIALS']['password']
+
+    # #load login details for linestarapp
+    # login = 'https://www.linestarapp.com/login'
+    # payload = {
+    #     'StylesheetManager_TSSM': '1',
+    #     'ScriptManager_TSM': 'login_form',
+    #     'xurl': 'https://www.linestarapp.com/login',
+    #     'master_product': '23350',
+    #     'vendor': 'sportsline',
+    #     'form_location': 'log_in_page',
+    #     'userid': user_id,
+    #     'password': password
+    # }
+
     parameters = {
         'nfl': {
             'sport': 1,
@@ -67,10 +86,15 @@ class LinestarappData:
                 
         #pull new json data and save to s3
         while True:
+            print(True)
             data = self._pull_json_data(pid)
             
-            #if json dict is small, it indicates stopping point for downloads
-            if len(str(data)) < 10000:  #######is this accurate for all sports?
+            if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
+                pid += 1
+                continue
+            
+            #stop if no data
+            if not data['Ownership']['Salaries']:  #######is this accurate for all sports?
                 break
             
             #check if projections data and name as such
@@ -86,8 +110,8 @@ class LinestarappData:
             )
 
             #update pid
+            print(self.site, pid)                 
             pid += 1
-            print(pid)                 
 
 
     def _delete_projections(self):
@@ -123,6 +147,7 @@ class LinestarappData:
 
 
     def _check_projection(self, data):
+        #need to redo, as earlier games can throw this off (maybe use date?)
         '''Check if json data is projections (True) or historical (False)'''
         sum_pts = sum([x['PS'] for x in data['Ownership']['Salaries']])
         

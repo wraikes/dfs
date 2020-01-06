@@ -10,11 +10,12 @@ from etl.load import *
 def etl(sport, source):
     if source == 'linestarapp':
         
-        data = extract_linestarapp(sport)        
+        data = extract_linestarapp(sport)   
         data = transform_linestarapp(data)        
         insert_linestarapp(data, sport)
-        
+
     elif source == 'sportsline':
+        
         data = extract_sportsline(sport)        
         data = transform_sportsline(data)        
         insert_sportsline(data, sport)

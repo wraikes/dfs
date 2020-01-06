@@ -37,12 +37,12 @@ def insert_linestarapp(data, sport):
             
             for event in data[site]:
                 event_id = list(event.keys())[0]
+
                 for player_id in event[event_id].keys():
                     values = (event_id, ) + tuple([
                         event[event_id][player_id][x] if x in event[event_id][player_id].keys() else None for x in var_keys
                     ])
-                    values = tuple(None if val == '-' else val for val in values)
-                    
+
                     cur.execute(
                         query_insert_linestarapp.format(sport, site, var_col_names, places),
                         values

@@ -18,9 +18,9 @@ class SportslineData:
 
     #load config parameters for sportsline
     cfg = configparser.ConfigParser()
-    cfg.read('./raw_data_pull/etl_sportsline.ini')
-    user_id = cfg['SPORTSLINE']['user_id']
-    password = cfg['SPORTSLINE']['password']
+    cfg.read('./raw_data_pull/etl.ini')
+    user_id = cfg['CREDENTIALS']['user_id']
+    password = cfg['CREDENTIALS']['password']
 
     #load login details for sportsline
     login = 'https://secure.sportsline.com/login'
