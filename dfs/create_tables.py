@@ -21,8 +21,7 @@ def create_table(sport):
             #cur.execute(nascar_linestarapp_create_table.format(site))
 
         elif sport == 'pga':
-            pass
-            #cur.execute(pga_linestarapp_create_table.format(site))        
+            cur.execute(pga_linestarapp_create_table.format(site))        
     
         elif sport == 'nba':
             cur.execute(nba_linestarapp_create_table.format(site))

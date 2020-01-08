@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import json
 
-from nba.optimizer import Optimizer
-
+from nba.optimizer import Optimizer as NBA_Optimizer
+from pga.optimizer import Optimizer as PGA_Optimizer
 
 def get_post_preds(i, trace, preds_scale, idx):
     beta_range = trace.beta.shape[1]
@@ -26,16 +26,20 @@ def get_lineup(df, sport, site):
         constants = ['name', 'pos', 'event_id']
         model_variables = ['pp', 'ppg', 'salary', 'lovecount', 'hatecount']
         
-        for col in model_variables:
-            df[col] = pd.to_numeric(df[col])
-
         #need to replace this
-        df = df[df.oteam.isin(['LAL', 'NY', 'SAC', 'PHO'])]
-        df = df[~df.name.isin(['LeBron James'])]
+        #df = df[df.oteam.isin(['DAL', 'DEN', 'ATL', 'HOU'])]
+        #df = df[df.oteam.isin(['CHI', 'NO', 'NY', 'UTA', 'MIL', 'GS'])]
+        df = df[df.oteam.isin(['NY', 'UTA', 'MIL', 'GS'])]
         
+    elif sport == 'pga':
+        constants = ['name', 'event_id']
+        model_variables = ['pp', 'ppg', 'salary', 'vegas_odds_0', 'vegas_value_0']
         
-        df_tmp = df[constants+model_variables].dropna()
-        preds = df_tmp[df_tmp.event_id==df.event_id.max()]
+    for col in model_variables:
+        df[col] = pd.to_numeric(df[col])
+            
+    df_tmp = df[constants+model_variables].dropna()
+    preds = df_tmp[df_tmp.event_id==df.event_id.max()]
         
     obj = pickle.loads(s3.Bucket("my-dfs-data").Object("{}/modeling/model_{}.pkl".format(sport, site)).get()['Body'].read())
     trace, scaler, player_ids = obj[0], obj[1], obj[2]
@@ -57,7 +61,10 @@ def get_lineup(df, sport, site):
     preds['preds'] = preds['posterior'].apply(lambda x: x[0].mean())
 
     #use optimizer for lineups
-    opt = Optimizer(preds, sport, site)
+    if sport == 'nba':
+        opt = NBA_Optimizer(preds, sport, site)
+    elif sport == 'pga':
+        opt = PGA_Optimizer(preds, sport, site)
     opt.solve()
     opt.get_lineup()
 

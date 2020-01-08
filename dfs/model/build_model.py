@@ -15,8 +15,13 @@ def build_model(df, sport, site):
     if sport == 'nba':
         constants = ['name', 'pos', 'ps', 'event_id']
         model_variables = ['pp', 'ppg', 'salary', 'lovecount', 'hatecount']
-        n_beta = len(model_variables)
-    
+        
+    elif sport == 'pga':
+        constants = ['name', 'ps', 'event_id']
+        model_variables = ['pp', 'ppg', 'salary', 'vegas_odds_0', 'vegas_value_0']
+        
+    n_beta = len(model_variables)
+
     df = df[df.projections=='false']
     df_tmp = df[constants+model_variables].dropna()
     

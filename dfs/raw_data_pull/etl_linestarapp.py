@@ -94,7 +94,10 @@ class LinestarappData:
                 continue
             
             #stop if no data
-            if not data['Ownership']['Salaries']:  #######is this accurate for all sports?
+            try:
+                if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
+                    break
+            except:
                 break
             
             #check if projections data and name as such

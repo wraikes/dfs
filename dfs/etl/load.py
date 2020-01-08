@@ -40,7 +40,7 @@ def insert_linestarapp(data, sport):
 
                 for player_id in event[event_id].keys():
                     values = (event_id, ) + tuple([
-                        event[event_id][player_id][x] if x in event[event_id][player_id].keys() else None for x in var_keys
+                        event[event_id][player_id][x] if x in event[event_id][player_id].keys() and event[event_id][player_id][x] != '-' else None for x in var_keys
                     ])
 
                     cur.execute(

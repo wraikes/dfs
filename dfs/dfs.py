@@ -11,8 +11,8 @@ from predictions.projections import get_lineup
 
 
 def dfs(sport, update, new_model):
-
-    for site in ['fd']: #need to work out dk
+    sites = ['fd'] if sport == 'nba' else ['fd', 'dk']
+    for site in sites: #need to work out dk
         #update data
         if update=='True':
             pull_data(sport, site)
