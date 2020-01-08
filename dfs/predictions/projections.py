@@ -30,7 +30,9 @@ def get_lineup(df, sport, site):
             df[col] = pd.to_numeric(df[col])
 
         #need to replace this
-        #df = df[df.oteam.isin(['PHO', 'DET', 'LAL', 'MEM'])]
+        df = df[df.oteam.isin(['LAL', 'NY', 'SAC', 'PHO'])]
+        df = df[~df.name.isin(['LeBron James'])]
+        
         
         df_tmp = df[constants+model_variables].dropna()
         preds = df_tmp[df_tmp.event_id==df.event_id.max()]
