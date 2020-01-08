@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from nba.optimizer import Optimizer as NBA_Optimizer
-from pga.optimizer import Optimizer as PGA_Optimizer
+from model.optimizer import Optimizer
 
 def get_post_preds(i, trace, preds_scale, idx):
     beta_range = trace.beta.shape[1]
@@ -29,7 +28,7 @@ def get_lineup(df, sport, site):
         #need to replace this
         #df = df[df.oteam.isin(['DAL', 'DEN', 'ATL', 'HOU'])]
         #df = df[df.oteam.isin(['CHI', 'NO', 'NY', 'UTA', 'MIL', 'GS'])]
-        df = df[df.oteam.isin(['NY', 'UTA', 'MIL', 'GS'])]
+        #df = df[df.oteam.isin(['NY', 'UTA', 'MIL', 'GS'])]
         
     elif sport == 'pga':
         constants = ['name', 'event_id']
@@ -61,10 +60,7 @@ def get_lineup(df, sport, site):
     preds['preds'] = preds['posterior'].apply(lambda x: x[0].mean())
 
     #use optimizer for lineups
-    if sport == 'nba':
-        opt = NBA_Optimizer(preds, sport, site)
-    elif sport == 'pga':
-        opt = PGA_Optimizer(preds, sport, site)
+    opt = Optimizer(preds, sport, site)
     opt.solve()
     opt.get_lineup()
 
