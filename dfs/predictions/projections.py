@@ -26,9 +26,10 @@ def get_lineup(df, sport, site):
         model_variables = ['pp', 'ppg', 'salary', 'lovecount', 'hatecount']
         
         #need to replace this
-        #df = df[df.oteam.isin(['DAL', 'DEN', 'ATL', 'HOU'])]
+        #df = df[df.oteam.isin(['LAC', 'DEN', 'PHO', 'CHA'])]
         #df = df[df.oteam.isin(['CHI', 'NO', 'NY', 'UTA', 'MIL', 'GS'])]
         #df = df[df.oteam.isin(['NY', 'UTA', 'MIL', 'GS'])]
+        df = df[df.name != 'Anthony Davis']
         
     elif sport == 'pga':
         constants = ['name', 'event_id']
@@ -57,7 +58,7 @@ def get_lineup(df, sport, site):
             preds.loc[preds.name==name, 'posterior'] = np.nan
     
     preds = preds.dropna()
-    preds['preds'] = preds['posterior'].apply(lambda x: x[0].mean())
+    preds['preds'] = preds['posterior'].apply(lambda x: np.median(x[0]))#.median())
 
     #use optimizer for lineups
     opt = Optimizer(preds, sport, site)
