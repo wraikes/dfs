@@ -2,7 +2,8 @@ import json
 import requests
 import boto3
 import configparser
-from datetime import date
+import logging
+from datetime import datetime, date
 
 class LinestarappData:
     '''Downloads data from linestarapp site into designated S3 bucket.
@@ -76,58 +77,63 @@ class LinestarappData:
         
         self._pid_start = self._html_parameters[self.sport]['pid_start']
         self._html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId='.format(_sport_id, _site_id)
-        self._folder = '{}/linestarapp'.format(self.sport)
+        self._folder = '{}/linestarapp'.format(self.sport) 
+        self._current_date = date.today()
 
-
+        # file for logging records
+        ###need to set to log bucket
+        logging.basicConfig(
+            filename='./{}_linestarapp_pull.log'.format(sport), 
+            level='DEBUG',
+            filemode='a'
+        )
+    
     def update_data(self):
         '''Delete projections, then pull and store all relevant json data'''
         self._delete_projections()
         pid = self._get_max_pid() + 1
         
-        with open('log_fail_linestarapp_pull.txt') as log:
+        while True:
+            data = self._pull_json_data(pid)
+            
+            ########################################################################
+            #TODO
+            ########################################################################
+            
+            #logging:
+                #unique log file for each sport
+                #unique log file for each task (pull, predict, etc.)
+                #save date, time, pid, status
+
+            ########################################################################
+            ########################################################################
+            ########################################################################
+            
+            #if data is empty and date is from prior date, continue, else break loop
+            if len(data['Ownership']['Salaries']) == 0:
+                _date_str = json.loads(data['SalaryContainerJson'])['Period']['Name']
+                _date = datetime.strptime(_date_str, '%b %d, %Y').date()
                 
-            while True:
-                data = self._pull_json_data(pid)
-                
-                ########################################################################
-                #TODO
-                ########################################################################
-    
-                #remove files that are not complete (missing scores)
-                    #doesn't need to be part of main code
-                
-                #logging:
-                    #save date, time, sport, pid of unsuccessful pulls
-                    #don't let it break loop (try/except)
-    
-                ########################################################################
-                ########################################################################
-                ########################################################################
-                
-                # QA data, if fail, then add to log
-                # if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
-                #     pid += 1
-                #     continue
-                # try:
-                #     if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
-                #         break
-                # except:
-                #     break
-                            
-                
-                # check if projections data and name as such            
-                proj = '_projections' if self._check_projection(data) else ''
-                object_name = '{}/{}_{}{}.json'.format(self.folder, self.site, pid, proj)
-                
-                # save new data to s3 bucket
-                obj = self.s3.Object(self.bucket.name, object_name)
-                obj.put(
-                    Body=json.dumps(data)
-                )
-    
-                # print pid to console for monitoring
-                print(self.site, pid)                 
-                pid += 1
+                if _date < self._current_date:
+                    logging.error('{} not found.'.format(pid))
+                    continue
+                else:
+                    break
+
+            # check if projections data and name as such            
+            proj = '_projections' if self._check_projection(data) else ''
+            object_name = '{}/{}_{}{}.json'.format(self.folder, self.site, pid, proj)
+            
+            # save new data to s3 bucket
+            obj = self.s3.Object(self.bucket.name, object_name)
+            obj.put(
+                Body=json.dumps(data)
+            )
+
+            # print pid to console for monitoring
+            logging.info('{} has been recorded.'.format(pid))
+            print(self.site, pid)                 
+            pid += 1
             
             
     def _delete_projections(self):
@@ -164,12 +170,12 @@ class LinestarappData:
 
     def _check_projection(self, data):
         '''Check if json data is projections (True) or historical (False)
-        by checking to see if data is from today or, has no points scored.'''
+        by checking to see if data is from today or has no points scored.'''
         sum_pts = sum([x['PS'] for x in data['Ownership']['Salaries']])
-        pid_date = data['Ownership']['Salaries'][0]['GT'].split('T')[0]
-        current_date = date.today().strftime("%Y-%m-%d")
-        
-        return sum_pts == 0 or current_date == pid_date
+        pid_str_date = data['Ownership']['Salaries'][0]['GT'].split('T')[0]
+        pid_date = datetime.strptime(pid_str_date, '%Y-%m-%d').date()
+
+        return sum_pts == 0 or self._current_date == pid_date
 
 
     def _get_pid(self, key):
