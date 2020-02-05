@@ -3,40 +3,38 @@
 
 import sys
 
-from raw_data_pull.etl import LinestarappData, SportslineData, NerdfantasyData
-from etl.etl_pipeline import etl
+from scrapers.scrapers import LinestarappData, SportslineData, FantasyNerdData
+
+from etl.etl import *
+
 from etl.combine_data import create_dataframe
 from model.build_model import build_model
 from predictions.projections import get_lineup
 
 
 def dfs(sport, update, new_model):
-    sites = ['fd'] if sport == 'nba' else ['fd', 'dk']
+    sites = ['fd', 'dk']
     for site in sites: #need to work out dk
-        #update data
-        if update=='True':
-            
-            linestarapp = LinestarappData(sport, site)
-            linestar.update_data()
-            
-            #todo: sportsline, nerdfantasy
-            
-        ### etl: s3 to rds
-        etl(sport, 'linestarapp')
-        #etl(sport, 'sportsline')
-        #if sport in ['nfl', 'nba', 'nhl', 'mlb']
-        #    etl(sport, 'nerd')
-    
-        ### combine all data to a saved rds table
-        df = create_dataframe(sport, site, save=True)
-        
-        if new_model=='True':
-            #update model & save to s3
-            build_model(df, sport, site)
 
-        #if projections exist, then get lineups
-        lineup = get_lineup(df, sport, site)
-        print('{}: {}'.format(site, lineup))
+        if update=='True':
+            linestarapp = LinestarappData(sport, site)
+            linestarapp.update_data()
+            
+        etl_linestarapp = LinestarappETL(sport)   
+        etl_linestarapp.extract()
+        etl_linestarapp.transform()
+        # etl_linestarapp.load()
+
+        # ### combine all data to a saved rds table
+        # df = create_dataframe(sport, site, save=True)
+        
+        # if new_model=='True':
+        #     #update model & save to s3
+        #     build_model(df, sport, site)
+
+        # #if projections exist, then get lineups
+        # lineup = get_lineup(df, sport, site)
+        # print('{}: {}'.format(site, lineup))
 
 
 
