@@ -1,2 +1,5 @@
 *.ini
 *playground*
+*__pycache__*
+*venv*
+*notes*
