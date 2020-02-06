@@ -23,7 +23,7 @@ def dfs(sport, update, new_model):
         etl_linestarapp = LinestarappETL(sport)   
         etl_linestarapp.extract()
         etl_linestarapp.transform()
-        # etl_linestarapp.load()
+        etl_linestarapp.load()
 
         # ### combine all data to a saved rds table
         # df = create_dataframe(sport, site, save=True)

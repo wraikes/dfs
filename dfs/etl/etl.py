@@ -9,9 +9,14 @@ import psycopg2
 from datetime import datetime
 
 from database_connection.database_connection import connect_to_database
-
+from etl.variables import get_variables
+from etl.sql_queries import *
 
 class LinestarappETL:
+    '''
+    The ETL process pulls data from designated s3 bucket, transforms it into
+    a dictionary, and loads data into the proper postgres table
+    '''
     _s3 = boto3.resource('s3')
     _bucket = _s3.Bucket('my-dfs-data') 
 
@@ -25,7 +30,8 @@ class LinestarappETL:
 
     #add decorator for connect_to_database()
     def extract(self):
-        
+        '''Pull data from s3 if PID is not already recorded in database,
+        store in temporary cache based on fd or dk'''
         for site in ['fd', 'dk']:
             self._cache[site] = []
             
@@ -59,6 +65,8 @@ class LinestarappETL:
 
 
     def transform(self):
+        '''Transforms the raw data in the _cache structure into a more usable
+        dictionary.'''
         for site in self._cache.keys():
             self._data[site] = {}
             
@@ -67,13 +75,12 @@ class LinestarappETL:
                 self._transform_matchup_data(site, data)
                 self._transform_ownership_data(site, data)
 
-        # pid = list(new_data.keys())[0]
-        # for player in new_data[pid].keys():
-        #     new_data[pid][player]['projections'] = data['projections']
-    
-        # self._data[key].append(new_data)
+            pids = list(new_data.keys())[0]
+            for player in self._data[site][pid].keys():
+                new_data[pid][player]['projections'] = data['projections']
 
-    
+        self._data[key].append(new_data)
+
     
     def _transform_salary_data(self, site, record):
         event_id = record['Ownership']['PeriodId']
@@ -126,7 +133,26 @@ class LinestarappETL:
                         self._data[site][event_id][player_id][key] = player_data[key]            
     
 
-        
+    def load(self):
+        var_keys, var_col_names = get_variables(self.sport)
+        places = ('%s, ' * (len(var_keys)+1))[:-2]
+    
+        with connect_to_database() as cur:
+            for site in self._data.keys():
+                cur.execute(query_delete_projections.format(self.sport, site))
+                
+                for event in self._data[site]:
+                    event_id = list(event.keys())[0]
+    
+                    for player_id in event[event_id].keys():
+                        values = (event_id, ) + tuple([
+                            event[event_id][player_id][x] if x in event[event_id][player_id].keys() and event[event_id][player_id][x] != '-' else None for x in var_keys
+                        ])
+    
+                        cur.execute(
+                            query_insert_linestarapp.format(self.sport, site, var_col_names, places),
+                            values
+                        )
 
 
 class SportslineETL:
