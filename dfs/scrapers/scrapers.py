@@ -92,15 +92,29 @@ class LinestarappData:
         '''Delete projections, then pull and store all relevant json data'''
         self._delete_projections()
         pid = self._get_max_pid() + 1
+        if pid == 276 or pid == 277:
+            pid = 278
         
         while True:
+            print(self.site, pid, str(1))  
             data = self._pull_json_data(pid)
-            
+
             #if data is empty and date is from prior date, continue, else break loop
-            if len(data['Ownership']['Salaries']) == 0:
+            if data['Ownership'] is None:
+                logging.shutdown()
+                break
+            
+            elif len(data['Ownership']['Salaries']) == 0:
                 _date_str = json.loads(data['SalaryContainerJson'])['Period']['Name']
-                _date = datetime.strptime(_date_str, '%b %d, %Y').date()
-                
+                try:
+                    _date = datetime.strptime(_date_str, '%b %d, %Y').date()
+                except:
+                    if pid == 276 or pid == 277:
+                        _date = datetime.strptime('Feb 13, 2020', '%b %d, %Y').date()
+                    else:
+                        _date = datetime.strptime('Feb 16, 2020', '%b %d, %Y').date()
+                        
+                    
                 if _date < self._current_date:
                     
                     # log pid if empty and not projections
@@ -116,10 +130,10 @@ class LinestarappData:
 
             # check if projections data and name as such            
             proj = '_projections' if self._check_projection(data) else ''
-            object_name = '{}/{}_{}{}.json'.format(self.folder, self.site, pid, proj)
+            object_name = '{}/{}_{}{}.json'.format(self._folder, self.site, pid, proj)
             
             # save new data to s3 bucket
-            obj = self.s3.Object(self.bucket.name, object_name)
+            obj = self._s3.Object(self._bucket.name, object_name)
             obj.put(
                 Body=json.dumps(data)
             )
@@ -140,7 +154,7 @@ class LinestarappData:
             if self.sport in obj.key and 'json' in obj.key and 'projections' in obj.key and self.site in obj.key:
         
                 # delete old projections data
-                self.s3.Object('my-dfs-data', obj.key).delete()
+                self._s3.Object('my-dfs-data', obj.key).delete()
         
         
     def _get_max_pid(self):
@@ -159,7 +173,7 @@ class LinestarappData:
 
     def _pull_json_data(self, pid):
         '''Pull json data from html page'''
-        html = self.html + str(pid)
+        html = self._html + str(pid)
         page = requests.get(html).content.decode() 
         data = json.loads(page)       
 

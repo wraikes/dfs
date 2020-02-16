@@ -8,35 +8,55 @@ class Optimizer:
         self.df = df
         self.site = site
         self.invert = invert
-
+        
         self.rewards = []
         self.costs = []
         self.total_picks = []
-        self.optimizer = pulp.LpProblem(self.sport, pulp.LpMaximize)
+        self.optimizer = pulp.LpProblem('optimizer', pulp.LpMaximize)
         self.lineup = []
 
         self.salaries = {}
         self.points = {}
         self.vars = {}
         
-    #works for nascar/pga
+
+
+
+
+class OptimizerNascar(Optimizer):
+    def __init__(self, df, site, invert=False):
+        Optimizer.__init__(self, df, site, invert)    
+        self.salary_constraint = 50000
+        self.lineup_constraint = 6 if self.site == 'dk' else 5
+        
     def _set_vars(self):
-        self.salaries = self.df[['name', 'salary']].set_index('name').to_dict()['salary']
+        self.salaries = self.df[['name', 'sal']].set_index('name').to_dict()['sal']
         self.points = self.df[['name', 'preds']].set_index('name').to_dict()['preds']            
-    
-        self.vars = {k: pulp.LpVariable(k, cat="Binary") for k in self.salaries.keys()}             
+
+        self.vars = {k: pulp.LpVariable(k, cat="Binary") for k in self.salaries.keys()}  
+        
+    def _set_optimizer(self):
+        for k, v in self.vars.items():
+            self.costs += pulp.lpSum([self.salaries[k] * self.vars[k]])
+            self.rewards += pulp.lpSum([self.points[k] * self.vars[k]])
+            self.total_picks += pulp.lpSum([self.vars[k] * 1])  
+
+        self.optimizer += pulp.lpSum(self.rewards)
+        self.optimizer += pulp.lpSum(self.total_picks) == self.lineup_constraint
+        self.optimizer += pulp.lpSum(self.costs) <= self.salary_constraint            
 
 
     def get_lineup(self):
-        self.set_optimizer()
+        self._set_vars()
+        self._set_optimizer()
         self.optimizer.solve()
-        
+
         for v in self.optimizer.variables():
             if v.varValue > 0:
-                self.lineup.append(' '.join(v.name.split('_')))
-
-
-class Optimizer_PGA(Optimizer):
+                self.lineup.append(' '.join(v.name.split('_')))  
+    
+            
+class OptimizerPGA(Optimizer):
     def __init__(self):
         Optimizer.__init__(self)    
         self.salary_constraint = 60000 if self.site == 'fd' else 50000
@@ -51,8 +71,9 @@ class Optimizer_PGA(Optimizer):
         self.optimizer += pulp.lpSum(self.total_picks) == 6
         self.optimizer += pulp.lpSum(self.costs) <= self.salary_constraint
 
-    
-class Optimizer_NBA(Optimizer):
+  
+                
+class OptimizerNBA(Optimizer):
     def __init__(self):
         Optimizer.__init__(self)
         self.salary_constraint = 56500 if self.site == 'fd' else 50000
@@ -60,7 +81,7 @@ class Optimizer_NBA(Optimizer):
     def _set_vars(self):
         for pos in self.df.pos.unique():
             df_pos = self.df[self.df.pos == pos]
-            salary = list(df_pos[["name", "salary"]].set_index("name").to_dict().values())[0]
+            salary = list(df_pos[["name", "sal"]].set_index("name").to_dict().values())[0]
             point = list(df_pos[["name", "preds"]].set_index("name").to_dict().values())[0]
             self.salaries[pos] = salary
             self.points[pos] = point

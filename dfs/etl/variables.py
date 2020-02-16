@@ -21,7 +21,8 @@ def get_variables(sport):
             'Qualifying Pos_1', 'Qualifying Best Lap Time_1', 'Qualifying Best Lap Speed_1', 
             'Laps_2', 'Miles_2', 'Surface_2', 'Restrictor Plate?_2', 'Cautions/Race_2', 
             'Races_3', 'Finished_3', 'Wins_3', 'Top 5s_3', 'Top 10s_3', 'Avg. Place_3', 
-            'Races_4', 'Finished_4', 'Wins_4', 'Top 5s_4', 'Top 10s_4', 'Avg. Place_4'
+            'Races_4', 'Finished_4', 'Wins_4', 'Top 5s_4', 'Top 10s_4', 'Avg. Place_4',
+            'projections'
         ]
         
         var_col_names = transform_variables(var_keys)

@@ -20,40 +20,54 @@ def build_model(df, sport, site):
         constants = ['name', 'ps', 'event_id']
         model_variables = ['pp', 'ppg', 'salary', 'vegas_odds_0', 'vegas_value_0']
         
-    n_beta = len(model_variables)
+    elif sport == 'nascar':
+        constants = ['name', 'ps', 'event_id']
+        model_variables = [
+            'sal',
+            'pp',
+            'practice_laps_1',
+            'races_4',
+            'finished_4',
+            'wins_4',
+            'top_5s_4',
+            'avg_place_4',
+            'practice_best_lap_time_rank'
+        ]
+    n_betas = len(model_variables)
 
     df = df[df.projections=='false']
-    df_tmp = df[constants+model_variables].dropna()
+    tmp = df[constants+model_variables].dropna()
+
+    X = tmp[tmp.event_id < event_id]
+    X['player_idx'] = X.name.astype('category').cat.codes
     
-    X_train = df_tmp[df_tmp.event_id < event_id]
-    X_train['player_idx'] = None
-    for name, val in zip(X_train.name.unique(), range(len(X_train.name.unique()))):
-        X_train['player_idx'] = np.where(X_train.name==name, val, X_train['player_idx'])
-
-    player_idx = pd.to_numeric(X_train.player_idx).values
-    n_player = len(X_train.player_idx.unique())
-
+    n_players = len(X.player_idx.unique())
+    player_idx = [int(x) for x in X.player_idx]
+    
     scaler = StandardScaler()
-    X_scale = scaler.fit_transform(X_train[model_variables])
-    player_ids = X_train[['name', 'player_idx']].drop_duplicates()
+    X_scale = scaler.fit_transform(X[model_variables])
     
     with pm.Model() as model:
+        
         # Hyperpriors for group nodes
-        mu_a = pm.Normal('mu_a', mu=0., sigma=100)
-        sigma_a = pm.HalfNormal('sigma_a', 5)
-
-        alpha = pm.Normal('alpha', mu=mu_a, sigma=sigma_a, shape=n_player)
-        beta = pm.Normal('beta', mu=0, sigma=10, shape=n_beta)
-        sigma = pm.HalfCauchy('sigma', 5)
-
-        mu = alpha[player_idx] + [beta[x]*X_scale[:, x] for x in range(n_beta)]
-
+        mu_a = pm.Normal('mu_a', mu=45, sigma=20)
+        sigma_a = pm.HalfNormal('sigma_a', 15)
+    
+        # Priors
+        alpha = pm.Normal('alpha', mu=mu_a, sigma=sigma_a, shape=n_players)
+        beta = pm.Normal('beta', mu=2, sigma=15, shape=n_betas)
+        sigma = pm.HalfNormal('sigma', 15)
+    
+        # Link function
+        mu = alpha[player_idx] + [beta[x]*X_scale[:, x] for x in range(n_betas)]
+    
         # Data likelihood
-        Y_obj = pm.Normal("Y_obs", mu=mu, sigma=sigma, observed=X_train['ps'])
+        Y_obj = pm.Normal("Y_obs", mu=mu, sigma=sigma, observed=X['ps'])
+    
+        trace = pm.sample(300, chains=2)
 
-        trace = pm.sample(150, chains=1)  
-
-    obj = pickle.dumps([trace, scaler, player_ids])
+    player_idx = X[['name', 'player_idx']]
+    obj = pickle.dumps([trace, scaler, player_idx])
     
     s3 = boto3.resource('s3')
     bucket = s3.Bucket('my-dfs-data')

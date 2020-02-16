@@ -65,7 +65,7 @@ class LinestarappETL:
 
 
     def transform(self):
-        '''Transforms the raw data in the _cache structure into a more usable
+        '''Transforms the raw data in the _cache attribute into a more usable
         dictionary.'''
         for site in self._cache.keys():
             self._data[site] = {}
@@ -74,12 +74,7 @@ class LinestarappETL:
                 self._transform_salary_data(site, data)
                 self._transform_matchup_data(site, data)
                 self._transform_ownership_data(site, data)
-
-            pids = list(new_data.keys())[0]
-            for player in self._data[site][pid].keys():
-                new_data[pid][player]['projections'] = data['projections']
-
-        self._data[key].append(new_data)
+                self._append_projections(site, data)
 
     
     def _transform_salary_data(self, site, record):
@@ -132,21 +127,30 @@ class LinestarappETL:
                     for key in ['HateCount', 'LoveCount']:
                         self._data[site][event_id][player_id][key] = player_data[key]            
     
-
+    
+    def _append_projections(self, site, record):
+        event_id = record['Ownership']['PeriodId']
+        projection = record['projections']
+        
+        for player_id in self._data[site][event_id]:
+            self._data[site][event_id][player_id]['projections'] = projection
+        
+        
     def load(self):
         var_keys, var_col_names = get_variables(self.sport)
         places = ('%s, ' * (len(var_keys)+1))[:-2]
-    
+        var_col_names = 'event_id, ' + var_col_names
+        
         with connect_to_database() as cur:
             for site in self._data.keys():
                 cur.execute(query_delete_projections.format(self.sport, site))
                 
-                for event in self._data[site]:
-                    event_id = list(event.keys())[0]
-    
-                    for player_id in event[event_id].keys():
+                for event_id in self._data[site]:
+                    tmp_data = self._data[site][event_id]
+                    
+                    for player_id in tmp_data.keys():
                         values = (event_id, ) + tuple([
-                            event[event_id][player_id][x] if x in event[event_id][player_id].keys() and event[event_id][player_id][x] != '-' else None for x in var_keys
+                            tmp_data[player_id][x] if tmp_data[player_id][x] != '-' else None for x in var_keys
                         ])
     
                         cur.execute(

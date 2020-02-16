@@ -52,7 +52,7 @@ nascar_linestarapp_create_table = '''
         player_id INT, 
         name VARCHAR, 
         pos VARCHAR, 
-        salary NUMERIC, 
+        sal NUMERIC, 
         gid NUMERIC, 
         gi VARCHAR, 
         date VARCHAR, 
@@ -117,7 +117,6 @@ nascar_linestarapp_create_table = '''
         top_5s_4 NUMERIC, 
         top_10s_4 NUMERIC, 
         avg_place_4 NUMERIC, 
-        note_pos NUMERIC,
         projections VARCHAR
     )
 '''
@@ -131,7 +130,7 @@ pga_linestarapp_create_table = '''
         player_id INT, 
         name VARCHAR, 
         pos VARCHAR, 
-        salary NUMERIC, 
+        sal NUMERIC, 
         gid NUMERIC, 
         gi VARCHAR, 
         date VARCHAR, 
@@ -213,7 +212,7 @@ nba_linestarapp_create_table = '''
         player_id INT, 
         name VARCHAR, 
         pos VARCHAR, 
-        salary NUMERIC, 
+        sal NUMERIC, 
         gid NUMERIC, 
         gi VARCHAR, 
         date VARCHAR, 
