@@ -17,22 +17,23 @@ def build_model(df, sport, site):
         model_variables = ['pp', 'ppg', 'salary', 'lovecount', 'hatecount']
         
     elif sport == 'pga':
-        constants = ['name', 'ps', 'event_id']
-        model_variables = ['pp', 'ppg', 'salary', 'vegas_odds_0', 'vegas_value_0']
+        constants = ['name', 'ps', 'event_id', 'sal']
+        model_variables = ['pp']
         
     elif sport == 'nascar':
-        constants = ['name', 'ps', 'event_id']
+        constants = ['name', 'ps', 'event_id', 'sal']
         model_variables = [
-            'sal',
-            'pp',
-            'practice_laps_1',
-            'races_4',
-            'finished_4',
-            'wins_4',
-            'top_5s_4',
-            'avg_place_4',
-            'practice_best_lap_time_rank'
+            # 'sal',
+            'pp'
+            # 'practice_laps_1',
+            # 'races_4',
+            # 'finished_4',
+            # 'wins_4',
+            # 'top_5s_4',
+            # 'avg_place_4',
+            # 'practice_best_lap_time_rank'
         ]
+        
     n_betas = len(model_variables)
 
     df = df[df.projections=='false']
@@ -50,7 +51,7 @@ def build_model(df, sport, site):
     with pm.Model() as model:
         
         # Hyperpriors for group nodes
-        mu_a = pm.Normal('mu_a', mu=45, sigma=20)
+        mu_a = pm.Normal('mu_a', mu=45, sigma=100)
         sigma_a = pm.HalfNormal('sigma_a', 15)
     
         # Priors
@@ -64,7 +65,7 @@ def build_model(df, sport, site):
         # Data likelihood
         Y_obj = pm.Normal("Y_obs", mu=mu, sigma=sigma, observed=X['ps'])
     
-        trace = pm.sample(300, chains=2)
+        trace = pm.sample(1000, tune=1000, chains=3)
 
     player_idx = X[['name', 'player_idx']]
     obj = pickle.dumps([trace, scaler, player_idx])

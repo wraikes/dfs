@@ -1,5 +1,5 @@
 def transform_variables(var_keys):
-        tmp = [x.lower().replace(' ', '_').replace('/', '_').replace('+', '_').replace('-', '_') for x in var_keys]
+        tmp = [x.lower().replace(' ', '_').replace('/', '_').replace('+', '_').replace('-', '_').replace(':', '_') for x in var_keys]
         tmp = [x.replace('.', '').replace('?', '').replace('%', '') for x in tmp]
         tmp = ['player_id' if x == 'pid' else x for x in tmp]
         tmp = ['date' if x == 'gt' else x for x in tmp]
@@ -25,7 +25,33 @@ def get_variables(sport):
             'projections'
         ]
         
-        var_col_names = transform_variables(var_keys)
+    elif sport == 'lol':
+        var_keys = [
+            'S', 'PID', 'Name', 'POS', 'SAL', 'GID', 'GI', 'GT', 'PPG', 'PP', 'PS', 'SS', 
+            'STAT', 'IS', 'Notes', 'Floor', 'Ceil', 'Conf', 'PTID', 'OTID', 'HTID', 'OE', 
+            'OppRank', 'OppTotal', 'DSPID', 'DGID', 'IMG', 'PTEAM', 'HTEAM', 'OTEAM', 
+            'Lock', 'Id', 'SalaryId', 'Owned', 'HateCount', 'LoveCount',
+            'Best Of_0', 'Odds_0', 'FPPG vs Opp_0', 'MatchPlay%_1'
+        
+        ]
+        
+
+    elif sport == 'pga':
+        var_keys = [
+            'S', 'PID', 'Name', 'POS', 'SAL', 'GID', 'GI', 'GT', 'PPG', 'PP', 'PS', 'SS', 
+            'STAT', 'IS', 'Notes', 'Floor', 'Ceil', 'Conf', 'PTID', 'OTID', 'HTID', 'OE', 
+            'OppRank', 'OppTotal', 'DSPID', 'DGID', 'IMG', 'PTEAM', 'HTEAM', 'OTEAM', 
+            'Lock', 'Id', 'SalaryId', 'Owned', 'HateCount', 'LoveCount', 'Events_0', 
+            'Wins_0', 'Top 5s_0', 'Top 10s_0', 'Avg. Place_0', 'Cuts Made_0', 
+            'Cut Made%_0', 'Vegas Odds_0', 'Vegas Value_0', 'Events_1', 'Wins_1', 
+            'Top 5s_1', 'Top 10s_1', 'Avg. Place_1', 'Cuts Made_1', 'Cut Made%_1',
+            'Events_2', 'Wins_2', 'Top 5s_2', 'Top 10s_2', 'Avg. Place_2', 
+            'Cuts Made_2', 'Cut Made%_2', 'GIR%_2', 'Driving Acc%_2', 'Driving Dist_2',
+            'Putting Avg_2', 'Scramble%_2', 'Events_3', 'Avg. Place_3', 'Cuts Made_3',
+            'Cut Made %_3', 'GIR%_3', 'Driving Acc%_3', 'Driving Dist_3', 'Putting Avg_3',
+            'Scramble%_3', 'projections' 
+        ]
+        
         
     # elif sport == 'pga':
     #     var_keys = [
@@ -113,8 +139,7 @@ def get_variables(sport):
     #         fppg_10, home_away_10, fav_dog_10, salary_id, owned, hatecount, \
     #         lovecount, projections'
     
-    elif sport == 'nhl':
-        pass
-        
+    var_col_names = transform_variables(var_keys)
+
     return var_keys, var_col_names
 

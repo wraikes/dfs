@@ -5,6 +5,8 @@ import numpy as np
 import json
 
 from model.optimizer import OptimizerNascar
+from model.optimizer import OptimizerPGA
+
 
 def get_post_preds(i, trace, preds_scale, idx):
     beta_range = trace.beta.shape[1]
@@ -32,24 +34,24 @@ def get_lineup(df, sport, site):
 
         
     elif sport == 'pga':
-        constants = ['name', 'event_id']
-        model_variables = ['pp', 'ppg', 'salary', 'vegas_odds_0', 'vegas_value_0']
+        constants = ['name', 'ps', 'event_id', 'sal']
+        model_variables = ['pp']
     
     elif sport == 'nascar':
-        constants = ['name', 'ps', 'event_id']
+        constants = ['name', 'ps', 'event_id', 'sal']
         model_variables = [    
-            'sal',
-            'pp',
-            'practice_laps_1',
-            'races_4',
-            'finished_4',
-            'wins_4',
-            'top_5s_4',
-            'avg_place_4',
-            'practice_best_lap_time_rank'
+            # 'sal',
+            'pp'
+            # 'practice_laps_1',
+            # 'races_4',
+            # 'finished_4',
+            # 'wins_4',
+            # 'top_5s_4',
+            # 'avg_place_4',
+            # 'practice_best_lap_time_rank'
         ]
     
-    for col in model_variables:
+    for col in model_variables + ['sal']:
         df[col] = pd.to_numeric(df[col])
 
     obj = pickle.loads(s3.Bucket("my-dfs-data").Object("{}/modeling/model_{}.pkl".format(sport, site)).get()['Body'].read())
@@ -60,8 +62,6 @@ def get_lineup(df, sport, site):
     preds['posterior'] = None
     n_betas = len(model_variables)
 
-
-    
     preds = preds.merge(player_idx, how='left', on='name').drop_duplicates()
 
     for idx in range(preds.shape[0]):
@@ -73,16 +73,15 @@ def get_lineup(df, sport, site):
         values = np.array(trace['alpha'][:, player_idx] + [trace['beta'][:, j]*preds_scale[idx, j] for j in range(n_betas)]).mean(axis=0)
         preds.loc[preds['player_idx']==player_idx, 'posterior'] = [[values]]
 
-
     preds = preds.dropna()
-    preds = preds[preds.races_4 > 60]
-    #preds['posterior'] = np.where(preds['posterior'] is None, [[0]], preds['posterior'])
-    #preds.dropna(inplace=True)
     preds['preds'] = preds['posterior'].apply(lambda x: np.mean(x[0]))
 
     #use optimizer for lineups
+    if sport == 'nascar':
+        opt = OptimizerNascar(preds, site)
+    elif sport == 'pga':
+        opt = OptimizerPGA(preds, site)
 
-    opt = OptimizerNascar(preds, site)
     opt.get_lineup()
 
     return opt.lineup

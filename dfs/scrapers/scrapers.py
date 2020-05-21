@@ -9,7 +9,7 @@ class LinestarappData:
     '''Downloads data from linestarapp site into designated S3 bucket.
     
     Parameters:
-        sport: specify 'nascar', 'nfl', 'nba', 'mlb', 'nhl', or 'pga'
+        sport: specify 'nascar', 'nfl', 'nba', 'mlb', 'nhl', 'pga' or 'lol'
         site: specify 'fd' (fanduel) or 'dk' (draftkings)
     
     Attributes:
@@ -45,6 +45,10 @@ class LinestarappData:
         'nascar': {
             'sport': 9,
             'pid_start': 209
+        },
+        'lol': {
+            'sport': 13,
+            'pid_start': 135
         }
     }
     
@@ -84,19 +88,16 @@ class LinestarappData:
         # file for logging records
         logging.basicConfig(
             filename='./logs/{}_linestarapp_raw_data_pull.log'.format(sport), 
-            level='DEBUG',
-            filemode='a'
+            level='INFO',
+            filemode='w'
         )
     
     def update_data(self):
         '''Delete projections, then pull and store all relevant json data'''
         self._delete_projections()
         pid = self._get_max_pid() + 1
-        if pid == 276 or pid == 277:
-            pid = 278
         
         while True:
-            print(self.site, pid, str(1))  
             data = self._pull_json_data(pid)
 
             #if data is empty and date is from prior date, continue, else break loop
@@ -106,15 +107,8 @@ class LinestarappData:
             
             elif len(data['Ownership']['Salaries']) == 0:
                 _date_str = json.loads(data['SalaryContainerJson'])['Period']['Name']
-                try:
-                    _date = datetime.strptime(_date_str, '%b %d, %Y').date()
-                except:
-                    if pid == 276 or pid == 277:
-                        _date = datetime.strptime('Feb 13, 2020', '%b %d, %Y').date()
-                    else:
-                        _date = datetime.strptime('Feb 16, 2020', '%b %d, %Y').date()
-                        
-                    
+                _date = datetime.strptime(_date_str, '%b %d, %Y').date()
+
                 if _date < self._current_date:
                     
                     # log pid if empty and not projections
@@ -124,6 +118,7 @@ class LinestarappData:
                         pid)
                     )
                     continue
+                
                 else:
                     logging.shutdown()
                     break
