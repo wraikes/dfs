@@ -3,36 +3,35 @@
 
 import sys
 
-from raw_data_pull.raw_data_pull import pull_data
-from etl.etl_pipeline import etl
-from etl.combine_data import create_dataframe
-from model.build_model import build_model
-from predictions.projections import get_lineup
+from etl_raw_data import *
+#from etl.etl_pipeline import etl
+#from etl.combine_data import create_dataframe
+#from model.build_model import build_model
+#from predictions.projections import get_lineup
 
 
-def dfs(sport, update, new_model):
-    sites = ['fd'] if sport == 'nba' else ['fd', 'dk']
-    for site in sites: #need to work out dk
-        #update data
-        if update=='True':
-            pull_data(sport, site)
-
-        ### etl: s3 to rds
-        etl(sport, 'linestarapp')
-        #etl(sport, 'sportsline')
-        #if sport in ['nfl', 'nba', 'nhl', 'mlb']
-        #    etl(sport, 'nerd')
+def dfs(sport, update_data, update_model):
     
-        ### combine all data to a saved rds table
-        df = create_dataframe(sport, site, save=True)
-        
-        if new_model=='True':
-            #update model & save to s3
-            build_model(df, sport, site)
+    #update data
+    if update_data=='True':
+        pull_data(sport)
 
-        #if projections exist, then get lineups
-        lineup = get_lineup(df, sport, site)
-        print('{}: {}'.format(site, lineup))
+    ### etl: s3 to rds
+    #etl(sport, 'linestarapp')
+    #etl(sport, 'sportsline')
+    #if sport in ['nfl', 'nba', 'nhl', 'mlb']
+    #    etl(sport, 'nerd')
+    
+    ### combine all data to a saved rds table
+    #df = create_dataframe(sport, site, save=True)
+        
+    #if update_model=='True':
+        #update model & save to s3
+    #    build_model(df, sport, site)
+
+    #if projections exist, then get lineups
+    #lineup = get_lineup(df, sport, site)
+    #print('{}: {}'.format(site, lineup))
 
 
 

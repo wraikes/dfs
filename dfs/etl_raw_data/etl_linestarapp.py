@@ -1,4 +1,7 @@
+#log: [pid][projection][date_pulled]
+
 import json
+import logging
 import requests
 import boto3
 import configparser
@@ -8,7 +11,6 @@ class LinestarappData:
     
     Parameters:
         sport: 'nascar', 'nfl', 'nba', 'mlb', 'nhl', or 'pga'
-        site: 'fd' or 'dk'
     
     Attributes:
         
@@ -63,16 +65,15 @@ class LinestarappData:
     }
     
 
-    def __init__(self, sport, site='fd'):
+    def __init__(self, sport):
         '''Initialize class'''
         self.sport = sport
-        self.site = site
-        
-        self.site_id = 2 if site == 'fd' else 1
+
         self.sport_id = self.parameters[self.sport]['sport']
         self.pid_start = self.parameters[self.sport]['pid_start']
+        self.site = {'fd': 1, 'dk': 2}
 
-        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId='.format(self.sport_id, self.site_id)
+        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId='.format(self.sport_id)
         self.folder = '{}/linestarapp'.format(self.sport)
 
 
@@ -86,12 +87,11 @@ class LinestarappData:
                 
         #pull new json data and save to s3
         while True:
-            print(True)
             data = self._pull_json_data(pid)
             
-            if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
-                pid += 1
-                continue
+            #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
+            #    pid += 1
+            #    continue
             
             #stop if no data
             try:
@@ -101,11 +101,20 @@ class LinestarappData:
                 break
             
             #check if projections data and name as such
-            if self._check_projection(data):
+            projection = self._check_projection(data)
+
+            if projection:
                 object_name = '{}/{}_{}_projections.json'.format(self.folder, self.site, pid)
+                log = '{}_projection_{}'.format(pid, current_date)
             else:
                 object_name = '{}/{}_{}.json'.format(self.folder, self.site, pid)
+                log = '{}_{}'.format(pid, current_date)
             
+            #write log
+            with open('~/dfs/logs/logs_{}', 'a') as log_file:
+                log_file.write(log)
+
+
             #save new data
             obj = self.s3.Object(self.bucket.name, object_name)
             obj.put(
