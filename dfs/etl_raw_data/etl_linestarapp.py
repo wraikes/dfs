@@ -73,11 +73,15 @@ class LinestarappData:
         self.pid_start = self.parameters[self.sport]['pid_start']
         self.site = {'fd': 1, 'dk': 2}
 
-        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId='.format(self.sport_id)
+        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'.format(self.sport_id)
         self.folder = '{}/linestarapp'.format(self.sport)
 
 
     def update_data(self):
+        #open log file
+        with open('~/dfs/logs/logs_linestarapp.json', 'a') as log_file:
+            logs = json.load(log_file)
+
         '''Update database with new sport data if applicable'''
         #delete projections data
         self._delete_projections()
@@ -87,43 +91,45 @@ class LinestarappData:
                 
         #pull new json data and save to s3
         while True:
-            data = self._pull_json_data(pid)
-            
-            #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
-            #    pid += 1
-            #    continue
-            
-            #stop if no data
-            try:
-                if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
+            for site in self.site.keys():
+                data = self._pull_json_data(pid, site)
+               
+                #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
+                #    pid += 1
+                #    continue
+                
+                #stop if no data
+                try:
+                    if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
+                        break
+                except:
                     break
-            except:
-                break
-            
-            #check if projections data and name as such
-            projection = self._check_projection(data)
+                
+                #check if projections data and name as such
+                projection = self._check_projection(data)
+                current_date = datetime.datetime.now().strf('%m-%d-%Y')
 
-            if projection:
-                object_name = '{}/{}_{}_projections.json'.format(self.folder, self.site, pid)
-                log = '{}_projection_{}'.format(pid, current_date)
-            else:
-                object_name = '{}/{}_{}.json'.format(self.folder, self.site, pid)
-                log = '{}_{}'.format(pid, current_date)
-            
-            #write log
-            with open('~/dfs/logs/logs_{}', 'a') as log_file:
-                log_file.write(log)
+                if projection:
+                    object_name = '{}/{}_{}_projections.json'.format(self.folder, self.site, pid)
+                    log = '{}_projection_{}'.format(pid, current_date)
+                else:
+                    object_name = '{}/{}_{}.json'.format(self.folder, self.site, pid)
+                    log = '{}_{}_{}'.format([SITE], pid, current_date)
+                
+                #write log
+                if log.split('_')[0] in logs[self.sport]:
+                    logs[sport].append(log)
 
 
-            #save new data
-            obj = self.s3.Object(self.bucket.name, object_name)
-            obj.put(
-                Body=json.dumps(data)
-            )
+                #save new data
+                obj = self.s3.Object(self.bucket.name, object_name)
+                obj.put(
+                    Body=json.dumps(data)
+                )
 
-            #update pid
-            print(self.site, pid)                 
-            pid += 1
+                #update pid
+                print(self.site, pid)                 
+                pid += 1
 
 
     def _delete_projections(self):
@@ -149,9 +155,9 @@ class LinestarappData:
         return max_pid
         
 
-    def _pull_json_data(self, pid):
+    def _pull_json_data(self, pid, site):
         '''Pull json data from html page'''
-        html = self.html + str(pid)
+        html = self.html.format(self.site[site]], str(pid))
         page = requests.get(html).content.decode() 
         data = json.loads(page)       
 
@@ -171,3 +177,4 @@ class LinestarappData:
         pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
         return pid
+
