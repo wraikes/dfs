@@ -79,7 +79,7 @@ class LinestarappData:
 
     def update_data(self):
         #open log file
-        with open('~/dfs/logs/logs_linestarapp.json', 'a') as log_file:
+        with open('~/dfs/logs/logs_linestarapp.json', 'r') as log_file:
             logs = json.load(log_file)
 
         '''Update database with new sport data if applicable'''
@@ -91,7 +91,9 @@ class LinestarappData:
                 
         #pull new json data and save to s3
         while True:
+            
             for site in self.site.keys():
+            
                 data = self._pull_json_data(pid, site)
                
                 #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
@@ -110,16 +112,15 @@ class LinestarappData:
                 current_date = datetime.datetime.now().strf('%m-%d-%Y')
 
                 if projection:
-                    object_name = '{}/{}_{}_projections.json'.format(self.folder, self.site, pid)
-                    log = '{}_projection_{}'.format(pid, current_date)
+                    object_name = '{}/{}_{}_projections.json'.format(self.folder, site, pid)
+                    log = '{}_projection_{}'.format(site, pid, current_date)
                 else:
-                    object_name = '{}/{}_{}.json'.format(self.folder, self.site, pid)
-                    log = '{}_{}_{}'.format([SITE], pid, current_date)
+                    object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
+                    log = '{}_{}_{}'.format(site, pid, current_date)
                 
                 #write log
-                if log.split('_')[0] in logs[self.sport]:
+                if log.split('_')[0] in [x.split('_')[:-1] for x in logs[self.sport]]:
                     logs[sport].append(log)
-
 
                 #save new data
                 obj = self.s3.Object(self.bucket.name, object_name)
@@ -130,6 +131,9 @@ class LinestarappData:
                 #update pid
                 print(self.site, pid)                 
                 pid += 1
+
+        with open('~/dfs/logs/logs_linestarapp.json', 'w') as log_file:
+            json.dump(logs, log_file)
 
 
     def _delete_projections(self):
@@ -146,7 +150,7 @@ class LinestarappData:
         max_pid = self.pid_start
         
         for obj in self.bucket.objects.all():
-            if self.sport in obj.key and 'json' in obj.key and self.site in obj.key:
+            if self.sport in obj.key and 'json' in obj.key:
                 pid = self._get_pid(obj.key)
                 
                 if max_pid < pid:
