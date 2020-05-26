@@ -5,8 +5,9 @@ import logging
 import requests
 import boto3
 import configparser
+from datetime import datetime
 
-class LinestarappData:
+class PullData:
     '''Class to download & update Linestarapp Data into S3.
     
     Parameters:
@@ -73,13 +74,14 @@ class LinestarappData:
         self.pid_start = self.parameters[self.sport]['pid_start']
         self.site = {'fd': 1, 'dk': 2}
 
-        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'.format(self.sport_id)
+        self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'
         self.folder = '{}/linestarapp'.format(self.sport)
 
 
     def update_data(self):
+        import pdb; pdb.set_trace()
         #open log file
-        with open('~/dfs/logs/logs_linestarapp.json', 'r') as log_file:
+        with open('/home/ec2-user/dfs/logs/logs_linestarapp.json', 'r') as log_file:
             logs = json.load(log_file)
 
         '''Update database with new sport data if applicable'''
@@ -90,37 +92,32 @@ class LinestarappData:
         pid = self._get_max_pid() + 1
                 
         #pull new json data and save to s3
-        while True:
-            
-            for site in self.site.keys():
-            
-                data = self._pull_json_data(pid, site)
+        reach_max_pid = True
+
+        while reach_max_pid:
+            for site, site_num in self.site.items():
+                data = self._pull_json_data(pid, site_num)
                
                 #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
                 #    pid += 1
                 #    continue
-                
+                 
                 #stop if no data
                 try:
                     if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
-                        break
+                       reach_max_pid = False
+                       break
                 except:
+                    reach_max_pid = False
                     break
                 
                 #check if projections data and name as such
                 projection = self._check_projection(data)
-                current_date = datetime.datetime.now().strf('%m-%d-%Y')
-
-                if projection:
-                    object_name = '{}/{}_{}_projections.json'.format(self.folder, site, pid)
-                    log = '{}_projection_{}'.format(site, pid, current_date)
-                else:
-                    object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
-                    log = '{}_{}_{}'.format(site, pid, current_date)
+                object_name, log = self._get_strings(site, pid, projection)
                 
-                #write log
-                if log.split('_')[0] in [x.split('_')[:-1] for x in logs[self.sport]]:
-                    logs[sport].append(log)
+                #write log if not already logged in
+                if log.split('_')[:2] not in [x.split('_')[:-1] for x in logs[self.sport]]:
+                    logs[self.sport].append(log)
 
                 #save new data
                 obj = self.s3.Object(self.bucket.name, object_name)
@@ -128,18 +125,20 @@ class LinestarappData:
                     Body=json.dumps(data)
                 )
 
-                #update pid
-                print(self.site, pid)                 
-                pid += 1
+                #print pid for monitoring
+                print(site, pid)                 
+            
+            #update pid
+            pid += 1
 
-        with open('~/dfs/logs/logs_linestarapp.json', 'w') as log_file:
+        with open('/home/ec2-user/dfs/logs/logs_linestarapp.json', 'w') as log_file:
             json.dump(logs, log_file)
 
 
     def _delete_projections(self):
         '''If s3 object is a projection, delete object'''
         for obj in self.bucket.objects.all():
-            if self.sport in obj.key and 'json' in obj.key and 'projections' in obj.key and self.site in obj.key:
+            if self.sport in obj.key and 'json' in obj.key and 'projections' in obj.key:
         
                 #delete old projections data
                 self.s3.Object('my-dfs-data', obj.key).delete()  
@@ -159,9 +158,9 @@ class LinestarappData:
         return max_pid
         
 
-    def _pull_json_data(self, pid, site):
+    def _pull_json_data(self, pid, site_num):
         '''Pull json data from html page'''
-        html = self.html.format(self.site[site]], str(pid))
+        html = self.html.format(self.sport_id, site_num, str(pid))
         page = requests.get(html).content.decode() 
         data = json.loads(page)       
 
@@ -181,4 +180,18 @@ class LinestarappData:
         pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
         return pid
+
+
+    def _get_strings(site, pid, projection):
+
+        current_date = datetime.now().strftime('%m-%d-%Y')
+
+        if projection:
+            object_name = '{}/{}_{}_projections.json'.format(self.folder, site, pid)
+            log = '{}_{}_projections_{}'.format(site, pid, current_date)
+        else:
+            object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
+            log = '{}_{}_{}'.format(site, pid, current_date)
+
+        return object_name, log
 

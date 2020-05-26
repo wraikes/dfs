@@ -3,7 +3,7 @@
 
 import sys
 
-from etl_raw_data import *
+from etl_raw_data import linestarapp
 #from etl.etl_pipeline import etl
 #from etl.combine_data import create_dataframe
 #from model.build_model import build_model
@@ -14,7 +14,8 @@ def dfs(sport, update_data, update_model):
     
     #update data
     if update_data=='True':
-        pull_data(sport)
+        pull_linestar_data = linestarapp.PullData(sport)
+        pull_linestar_data.update_data()
 
     ### etl: s3 to rds
     #etl(sport, 'linestarapp')

@@ -2,24 +2,20 @@
 import json
 import boto3
 
-def update_logs():
+def create_logs():
     s3 = boto3.resource('s3')
     bucket = s3.Bucket('my-dfs-data')
+    logs = {}
 
-    with open('./logs_linestarapp.json', 'r') as log_file:
-        logs = json.load(log_file)
-
-    for sport in ['nascar', 'pga']:
-
-        if sport not in logs.keys():
-            logs[sport] = []
+    for sport in ['pga', 'nascar']:
+        logs[sport] = []
 
         for obj in bucket.objects.all():
-        
             if sport in obj.key and 'json' in obj.key:
+                
                 object = s3.Object('my-dfs-data', obj.key)
                 current_date = object.last_modified.strftime('%m-%d-%Y') 
-                log = '{}_{}\n'.format(obj.key.split('.')[0].split('/')[-1], current_date)  
+                log = '{}_{}'.format(obj.key.split('.')[0].split('/')[-1], current_date)  
                 
                 if log not in logs[sport]:
                     logs[sport].append(log)
@@ -29,5 +25,5 @@ def update_logs():
 
 
 if __name__ == '__main__':
-    update_logs()
+    create_logs()
 
