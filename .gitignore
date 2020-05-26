@@ -1,3 +1,4 @@
 *.ini
+*_pycache_*
 *.json
 *playground*
