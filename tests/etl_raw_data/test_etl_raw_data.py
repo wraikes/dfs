@@ -3,8 +3,11 @@ import pandas as pd
 
 from dfs.etl_raw_data import linestarapp
 
-
 line_data_pull = linestarapp.PullData('nascar')
+
+class TestLinestarappPullData():
+    pass
+
 
 def test_get_pid():
     test_key_1 = 'nascar/linestarapp/dk_219.json'    
