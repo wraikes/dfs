@@ -182,7 +182,7 @@ class PullData:
         return pid
 
 
-    def _get_strings(site, pid, projection):
+    def _get_strings(self, site, pid, projection):
 
         current_date = datetime.now().strftime('%m-%d-%Y')
 
