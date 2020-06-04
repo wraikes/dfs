@@ -12,27 +12,24 @@ from etl_raw_data import linestarapp
 
 def dfs(sport, update_data, update_model):
     
-    #update data
+    #pull new data into s3
     if update_data=='True':
+        #linestarapp
         pull_linestar_data = linestarapp.PullData(sport)
         pull_linestar_data.update_data()
-
-    ### etl: s3 to rds
-    #etl(sport, 'linestarapp')
-    #etl(sport, 'sportsline')
-    #if sport in ['nfl', 'nba', 'nhl', 'mlb']
-    #    etl(sport, 'nerd')
-    
-    ### combine all data to a saved rds table
-    #df = create_dataframe(sport, site, save=True)
         
-    #if update_model=='True':
-        #update model & save to s3
-    #    build_model(df, sport, site)
+        #sportsline
+        
 
-    #if projections exist, then get lineups
-    #lineup = get_lineup(df, sport, site)
-    #print('{}: {}'.format(site, lineup))
+    #process s3 data into rds
+    
+
+    #update model
+    if update_model=='True':
+        pass
+    
+
+    #make predictions
 
 
 
