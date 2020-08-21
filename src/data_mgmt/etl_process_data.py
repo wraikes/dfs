@@ -19,7 +19,7 @@ class LinearstarappData:
         self.raw_files = {}
         self.processed_files = {}
 
-        self.tmp_data = {}
+        self.tmp_data = None
         self.event_id = None
 
     def extract(self, sport):
@@ -63,22 +63,20 @@ class LinearstarappData:
             self.processed_files[key] = []
              
             for data in self.raw_files[key]:
+                self.event_id = data['Ownership']['PeriodId']
+                self.tmp_data = {}
+                
                 _transform_salary_data(data, key)
                 _transform_matchup_data(data, key)
-                _transform_ownership_data(data, key)
+                #_transform_ownership_data(data, key)
                 
-
-
-                pid = list(self.tmp_data.keys())[0]
-                for player in self.tmp_data[pid].keys():
-                    self.tmp_data[pid][player]['projections'] = data['projections']
+                for player in self.tmp_data[self.event_id].keys():
+                    self.tmp_data[self.event_id][player]['projections'] = data['projections']
             
                 self.processed_files[key].append(self.tmp_data)
 
 
-    def _transform_salary_data(json_data, key):
-        self.event_id = json_data['Ownership']['PeriodId']
-        self.tmp_data = {}
+    def _transform_salary_data(self, json_data, key):
         self.tmp_data[self.event_id] = {}
         
         for player_data in json_data['Ownership']['Salaries']:
@@ -87,7 +85,7 @@ class LinearstarappData:
             self.tmp_data[self.event_id][player_id] = player_data
     
     
-    def _linestarapp_matchup_data(json_data, key):
+    def _linestarapp_matchup_data(self, json_data, key):
       
         for i, table in enumerate(json_data['MatchupData']):
             col_names = table['Columns']
@@ -106,132 +104,9 @@ class LinearstarappData:
                 for key, value in player_dict.items():
                     self.tmp_data[self.event_id][player_id]['{}_{}'.format(key, i)] = value
                         
-                
-def _linestarapp_ownership_data(json_data, key):
 
-    try:
-
-        for player_id in self.tmp_data[self.event_id].keys():
-            for key in ['SalaryId', 'Owned', 'HateCount', 'LoveCount']:
-                self.tmp_data[self.event_id][player_id][key] = None
-        
-        for player_id in self.tmp_data[self.event_id].keys():
-            salary_id = self.tmp_data[self.event_id][player_id]['Id']
-            
-            for player in json_data['AvgAdjustments']:
-                if salary_id == player['SalaryId']:
-                    for key in ['HateCount', 'LoveCount']:
-                        self.tmp_data[self.event_id][player_id][key] = player[key]
-                
-    except:
+    def load(self):
         pass
-                    
-
-
-
-
-
-
-def transform_sportsline_lead(file):
-    try:
-        cache = {}
-    
-        cache['title'] = file['details']['title']
-        cache['date'] = file['details']['content_date']
-        cache['date'] = datetime.fromtimestamp(file['details']['content_date'])
-        
-        tmp_cache = file['metaData']['body'].split('10:</strong></p>')
-        if '<br>' in tmp_cache[1]:
-            positions = tmp_cache[1].split('<br>')
-        
-        positions = _clean_positions_picks(positions)
-    
-        for i, pos in enumerate(positions):
-            cache['pos_{}'.format(i+1)] = pos[0].strip()
-            
-        return cache
-    
-    except:
-        return {}
-
-
-
-
-
-
-def _clean_positions_picks(positions):
-    new = []
-    for pos in positions:
-        pos = pos.replace('\t', '').replace('/', '-')
-        pos = re.sub(r'\<.+\>', ' ', pos)
-        pos_ = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
-        pos_odds = re.findall(r'\d+-\d+', pos)
-        pos_ += pos_odds
-        if pos_:
-            new.append(pos_)
-    return new
-    
-
-
-
-
-def _clean_positions_dfs_pro(positions, dk):
-    new = []
-    for pos in positions:
-        pos = pos.replace('D\t', '').replace('\t', '')
-        pos = re.sub(r'\<.+\>', '', pos)
-        pos = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
-        if pos:
-            new.append(pos)
-            
-    if not dk:
-        new = new[5:] + new[0:5]
-    
-    return new
-
-
-def _sportsline_dfs_pro_data(file):
-    try: 
-        cache = {}
-        positions = []
-        dk = True
-        
-        cache['title'] = file['details']['title']
-        cache['date'] = file['details']['content_date']
-        cache['date'] = datetime.fromtimestamp(file['details']['content_date'])
-        
-        text = file['details']['body']
-        
-        if '<strong>DraftKings' in text:
-            if '<strong>FanDuel' in text:
-                if text.find('<strong>FanDuel') > text.find('<strong>DraftKings'):
-                    tmp_cache = text.split('<strong>DraftKings')[1].split('<strong>FanDuel')
-                else:
-                    dk = False
-                    tmp_cache = text.split('<strong>FanDuel')[1].split('<strong>DraftKings')
-            else:
-                tmp_cache = [text.split('<strong>DraftKings')[1]]
-        else:
-            tmp_cache = text.split('</strong></p><p>')[1:]
-        if '<br>' in tmp_cache[0]:
-            positions += tmp_cache[0].split('<br>')
-        else:
-            positions += tmp_cache[0].split('</p><p>')
-        if len(tmp_cache) > 1:
-            if '<br>' in tmp_cache[1]:
-                positions += tmp_cache[1].split('<br>')
-            else:
-                positions += tmp_cache[1].split('</p><p>')
-    
-        positions = _clean_positions_dfs_pro(positions, dk)
-    
-        for i, pos in enumerate(positions):
-            cache['pos_{}'.format(i+1)] = pos[0].strip()
-    
-        return cache
-        
-    except:
-        return {}
 
 
 
@@ -245,6 +120,138 @@ def _sportsline_dfs_pro_data(file):
 
 
 
+
+
+
+
+
+
+
+
+#    def _linestarapp_ownership_data(json_data, key):
+#    
+#        try:
+#    
+#            for player_id in self.tmp_data[self.event_id].keys():
+#                for key in ['SalaryId', 'Owned', 'HateCount', 'LoveCount']:
+#                    self.tmp_data[self.event_id][player_id][key] = None
+#            
+#            for player_id in self.tmp_data[self.event_id].keys():
+#                salary_id = self.tmp_data[self.event_id][player_id]['Id']
+#                
+#                for player in json_data['AvgAdjustments']:
+#                    if salary_id == player['SalaryId']:
+#                        for key in ['HateCount', 'LoveCount']:
+#                            self.tmp_data[self.event_id][player_id][key] = player[key]
+#                    
+#        except:
+#            pass
+#                        
+
+#
+#
+#
+#
+#def transform_sportsline_lead(file):
+#    try:
+#        cache = {}
+#    
+#        cache['title'] = file['details']['title']
+#        cache['date'] = file['details']['content_date']
+#        cache['date'] = datetime.fromtimestamp(file['details']['content_date'])
+#        
+#        tmp_cache = file['metaData']['body'].split('10:</strong></p>')
+#        if '<br>' in tmp_cache[1]:
+#            positions = tmp_cache[1].split('<br>')
+#        
+#        positions = _clean_positions_picks(positions)
+#    
+#        for i, pos in enumerate(positions):
+#            cache['pos_{}'.format(i+1)] = pos[0].strip()
+#            
+#        return cache
+#    
+#    except:
+#        return {}
+#
+#
+#
+#
+#
+#
+#def _clean_positions_picks(positions):
+#    new = []
+#    for pos in positions:
+#        pos = pos.replace('\t', '').replace('/', '-')
+#        pos = re.sub(r'\<.+\>', ' ', pos)
+#        pos_ = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
+#        pos_odds = re.findall(r'\d+-\d+', pos)
+#        pos_ += pos_odds
+#        if pos_:
+#            new.append(pos_)
+#    return new
+#    
+#
+#
+#
+#
+#def _clean_positions_dfs_pro(positions, dk):
+#    new = []
+#    for pos in positions:
+#        pos = pos.replace('D\t', '').replace('\t', '')
+#        pos = re.sub(r'\<.+\>', '', pos)
+#        pos = re.findall(r'[A-Z]+[a-z.]*\s[A-Z][a-z.]+[A-Z]*[a-z.]*\s*[A-Z]*[a-z.]*', pos)
+#        if pos:
+#            new.append(pos)
+#            
+#    if not dk:
+#        new = new[5:] + new[0:5]
+#    
+#    return new
+#
+#
+#def _sportsline_dfs_pro_data(file):
+#    try: 
+#        cache = {}
+#        positions = []
+#        dk = True
+#        
+#        cache['title'] = file['details']['title']
+#        cache['date'] = file['details']['content_date']
+#        cache['date'] = datetime.fromtimestamp(file['details']['content_date'])
+#        
+#        text = file['details']['body']
+#        
+#        if '<strong>DraftKings' in text:
+#            if '<strong>FanDuel' in text:
+#                if text.find('<strong>FanDuel') > text.find('<strong>DraftKings'):
+#                    tmp_cache = text.split('<strong>DraftKings')[1].split('<strong>FanDuel')
+#                else:
+#                    dk = False
+#                    tmp_cache = text.split('<strong>FanDuel')[1].split('<strong>DraftKings')
+#            else:
+#                tmp_cache = [text.split('<strong>DraftKings')[1]]
+#        else:
+#            tmp_cache = text.split('</strong></p><p>')[1:]
+#        if '<br>' in tmp_cache[0]:
+#            positions += tmp_cache[0].split('<br>')
+#        else:
+#            positions += tmp_cache[0].split('</p><p>')
+#        if len(tmp_cache) > 1:
+#            if '<br>' in tmp_cache[1]:
+#                positions += tmp_cache[1].split('<br>')
+#            else:
+#                positions += tmp_cache[1].split('</p><p>')
+#    
+#        positions = _clean_positions_dfs_pro(positions, dk)
+#    
+#        for i, pos in enumerate(positions):
+#            cache['pos_{}'.format(i+1)] = pos[0].strip()
+#    
+#        return cache
+#        
+#    except:
+#        return {}
 
 
 
@@ -296,71 +303,55 @@ def _sportsline_dfs_pro_data(file):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def etl_sportsline(sport):
-    #initialize bucket
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket('my-dfs-data')
-    data_files = {}
-    
-    links = []
-    cols = ['link_pro', 'link_lead', 'link_bet']
-    tables = [
-        '{}_sportsline_pro',
-        '{}_sportsline_lead',
-        '{}_sportsline_bet'
-    ]
-    
-    #pid's used to append new data
-    with connect_to_database() as cur:
-        for col, table in zip(cols, tables):
-            cur.execute('SELECT DISTINCT {} FROM {}'.format(col, table))
-            [links.append(link[0]) for link in cur.fetchall()]
-    
-    #loop thru bucket and extract data
-    for obj in bucket.objects.filter(Prefix='{}/{}/'.format(sport, 'sportsline')):
-        #skip objects if folder
-        if obj.key[-1] == '/':
-            continue
-        
-        #if file pid not in rds pid keys, pull file, else continue        
-        link = obj.key.split('/')[-1]
-        
-        if link in links:
-            continue
-        else:
-            file = s3.Object('my-dfs-data', obj.key)
-            data = file.get()['Body'].read()
-            data = json.loads(data)
-
-        # if 'dfs-pro' in link:
-        #     data = _transform_sportsline_pro(data, link)
-        #     for row in data:
-        #         _insert_sportsline_pro(row)
-                
-        # elif 'surprising-picks' in link and sport == 'pga': 
-        #     data = _extract_sportsline_lead(data)
-        #     data = _transform_sportsline_lead(data, link)
-        #     for row in data:
-        #         _insert_sportsline_lead(row)
-        
-        ### have to think about how different titles relate to different sports
-
-        
-
-
+#
+#def etl_sportsline(sport):
+#    #initialize bucket
+#    s3 = boto3.resource('s3')
+#    bucket = s3.Bucket('my-dfs-data')
+#    data_files = {}
+#    
+#    links = []
+#    cols = ['link_pro', 'link_lead', 'link_bet']
+#    tables = [
+#        '{}_sportsline_pro',
+#        '{}_sportsline_lead',
+#        '{}_sportsline_bet'
+#    ]
+#    
+#    #pid's used to append new data
+#    with connect_to_database() as cur:
+#        for col, table in zip(cols, tables):
+#            cur.execute('SELECT DISTINCT {} FROM {}'.format(col, table))
+#            [links.append(link[0]) for link in cur.fetchall()]
+#    
+#    #loop thru bucket and extract data
+#    for obj in bucket.objects.filter(Prefix='{}/{}/'.format(sport, 'sportsline')):
+#        #skip objects if folder
+#        if obj.key[-1] == '/':
+#            continue
+#        
+#        #if file pid not in rds pid keys, pull file, else continue        
+#        link = obj.key.split('/')[-1]
+#        
+#        if link in links:
+#            continue
+#        else:
+#            file = s3.Object('my-dfs-data', obj.key)
+#            data = file.get()['Body'].read()
+#            data = json.loads(data)
+#
+#        # if 'dfs-pro' in link:
+#        #     data = _transform_sportsline_pro(data, link)
+#        #     for row in data:
+#        #         _insert_sportsline_pro(row)
+#                
+#        # elif 'surprising-picks' in link and sport == 'pga': 
+#        #     data = _extract_sportsline_lead(data)
+#        #     data = _transform_sportsline_lead(data, link)
+#        #     for row in data:
+#        #         _insert_sportsline_lead(row)
+#        
+#        ### have to think about how different titles relate to different sports
+#
+#        
+#
