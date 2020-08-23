@@ -3,35 +3,36 @@
 
 import sys
 
-from etl_raw_data import linestarapp
+from data_mgmt.etl_raw_data import RawDataLine
+from data_mgmt.etl_process_data import ProcessDataLine
+
 #from etl.etl_pipeline import etl
 #from etl.combine_data import create_dataframe
 #from model.build_model import build_model
 #from predictions.projections import get_lineup
 
 
-def dfs(sport, update_data, update_model):
+def dfs(sport):
     
-    #pull new data into s3
-    if update_data=='True':
-        #linestarapp
-        pull_linestar_data = linestarapp.PullData(sport)
-        pull_linestar_data.update_data()
-        
-        #sportsline
-        
+    #pull new data
+    line_raw = RawDataLine(sport)
+    line_raw.update_data()
 
-    #process s3 data into rds
-    
+    #etl data from s3 into rds
+    line_process = ProcessDataLine(sport)
+    line_process.extract()
+    line_process.transform()
+    ##line_process.load()
 
-    #update model
-    if update_model=='True':
-        pass
-    
+    #process new data from rds
+    ##feature engineering/processing
 
     #make predictions
-
+    ##load model
+    ##make predictions
+    ##optimize
 
 
 if __name__ == '__main__':
-    dfs(sys.argv[1], sys.argv[2], sys.argv[3])
+    import pdb; pdb.set_trace()
+    dfs(sys.argv[1])

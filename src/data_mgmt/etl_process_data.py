@@ -9,7 +9,7 @@ from datetime import datetime
 from database_connection.database_connection import connect_to_database
 
 
-class LinearstarappData:
+class ProcessDataLine:
 
     def __init__(self):
         self.s3 = boto3.resource('s3')
@@ -107,15 +107,6 @@ class LinearstarappData:
 
     def load(self):
         pass
-
-
-
-
-
-
-
-
-
 
 
 
