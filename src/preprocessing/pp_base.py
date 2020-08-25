@@ -31,6 +31,18 @@ class MissingCat(BaseEstimator, TransformerMixin):
 		return X
 
 
+class DateColumns(BaseEstimator, TransformerMixin):
+	def __init__(self, vars):
+		self.vars = vars
+
+	def fit(X, y=None):
+		return self
+
+	def transform(X, y=None):
+		for var in self.vars:
+			X[f'{var}_DAY'] = X[var].dt.day
+			X[f'{var}_MONTH'] = X[var].dt.month
+			X[f'{var}_YEAR'] = X[var].dt.year
 
 
 
