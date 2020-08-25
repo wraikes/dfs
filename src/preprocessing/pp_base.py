@@ -8,10 +8,10 @@ class MissingCat(BaseEstimator, TransformerMixin):
 	def __init__(self, vars):
 		self.vars = vars
 
-	def fit(X, y=None):
+	def fit(self, X, y=None):
 		return self
 
-	def transform(X, y=None):
+	def transform(self, X, y=None):
 		for var in self.vars:
 			X[var].fillna('NA', inplace=True)
 
@@ -22,10 +22,10 @@ class DateColumns(BaseEstimator, TransformerMixin):
 	def __init__(self, vars):
 		self.vars = vars
 
-	def fit(X, y=None):
+	def fit(self, X, y=None):
 		return self
 
-	def transform(X, y=None):
+	def transform(self, X, y=None):
 		for var in self.vars:
 			X[f'{var}_DAY'] = X[var].dt.day
 			X[f'{var}_MONTH'] = X[var].dt.month
@@ -36,10 +36,10 @@ class OneHotEncoder(BaseEstimator, TransformerMixin):
 	def __init__(self, vars):
 		self.vars = vars
 
-	def fit(X, y=None):
+	def fit(self, X, y=None):
 		return self
 
-	def transform(X, y=None):
+	def transform(self, X, y=None):
 		for var in self.vars:
 			X = pd.get_dummies(X, columns=[var])
 

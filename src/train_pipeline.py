@@ -6,9 +6,7 @@ import sys
 from pipelines import pipe_nascar as pipe
 from config import config
 
-def train_pipeline():
-	sport = sys.argv[1]
-
+def train_pipeline(sport):
 	#load data
 	df = pd.read_csv('../data/nascar_fd.csv', parse_dates=['date'])
 
@@ -21,7 +19,8 @@ def train_pipeline():
 
 
 if __name__ == '__main__':
-	train_pipeline()
+	import pdb; pdb.set_trace()
+	train_pipeline(sys.argv[1])
 
 
 
