@@ -66,35 +66,34 @@ class RawDataLine:
 
     def update_data(self):
         '''Update database with new sport data if applicable'''
-        #delete projections data
-        self._delete_projections()
 
         #get starting pid reference number for html download
-        pid = self._get_max_pid() + 1
-                
-        #pull new json data and save to s3
-        reach_max_pid = True
+        pid = self._get_max_pid() + 1        
 
-        while reach_max_pid:
+        #pull new json data and save to s3
+        reach_max_pid = False
+
+        while not reach_max_pid:
             for site, site_num in self.site.items():
                 data = self._pull_json_data(pid, site_num)
                
-                #if (pid == 408 or pid == 606 or pid == 775 or pid == 1026) and self.sport == 'nba':
-                #    pid += 1
-                #    continue
+                #future reference: some pids are missing (eg nba pid in 408, 606, 775, 1026)
                  
                 #stop if no data
                 try:
-                    if not len(data['Ownership']['Salaries']) > 0:  #######is this accurate for all sports?
-                       reach_max_pid = False
-                       break
+                    if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
+                        reach_max_pid = True
+                        break
                 except:
-                    reach_max_pid = False
+                    reach_max_pid = True
                     break
                 
                 #check if projections data and name as such
-                projection = self._check_projection(data)
-                object_name = self._get_string(site, pid, projection)
+                if self._check_projection(data):
+                    reach_max_pid = True
+                    break
+
+                object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
                 
                 #save new data
                 obj = self.s3.Object(self.bucket.name, object_name)
@@ -154,18 +153,6 @@ class RawDataLine:
         pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
         return pid
-
-
-    def _get_string(self, site, pid, projection):
-
-        if projection:
-            object_name = '{}/{}_{}_projections.json'.format(self.folder, site, pid)
-        else:
-            object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
-
-        return object_name
-
-
 
 
 

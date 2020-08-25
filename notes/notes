@@ -59,6 +59,19 @@ Tests:
 
 
 
+Functionality:
+- get predictions
+- save files to s3 (only permanent files - projections not needed)
+
+
+
+
+
+
+
+
+
+
 
 
 

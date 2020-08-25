@@ -3,19 +3,6 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 
-class MissingNum(BaseEstimator, TransformerMixin):
-	def __init__(self, vars):
-		self.vars = vars
-
-	def fit(X, y=None):
-		return self
-
-	def transform(X, y=None):
-		for var in self.vars:
-			X[var] = X.groupby('name')[var].apply(lambda x: x.fillna(x.median()))
-
-		return X
-
 
 class MissingCat(BaseEstimator, TransformerMixin):
 	def __init__(self, vars):
@@ -45,8 +32,18 @@ class DateColumns(BaseEstimator, TransformerMixin):
 			X[f'{var}_YEAR'] = X[var].dt.year
 
 
+class OneHotEncoder(BaseEstimator, TransformerMixin):
+	def __init__(self, vars):
+		self.vars = vars
 
+	def fit(X, y=None):
+		return self
 
+	def transform(X, y=None):
+		for var in self.vars:
+			X = pd.get_dummies(X, columns=[var])
+
+		return X
 
 
 
