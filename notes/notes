@@ -65,13 +65,19 @@ Functionality:
 
 
 
-
-
-
-
-
-
-
+STEPS:
+- train pipeline
+- make predictions on new data via prediction.py
+- work on ETL pipelines (raw data & prediction)
+	- no need for projections in s3
+- flesh out notebook pipeline
+	- look into ARIMA variables (PACF, ACF, trend differencing)
+- deployment:
+	- flask
+	- testing
+	- logging
+	- pathnames
+	- config
 
 
 

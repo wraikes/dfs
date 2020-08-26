@@ -19,19 +19,7 @@ from sklearn.base import TransformerMixin
 
 
 #### MOVE BACK TO BASE
-class MissingNum(BaseEstimator, TransformerMixin):
-	def __init__(self, vars):
-		self.vars = vars
 
-	def fit(self, X, y=None):
-		return self
-
-	def transform(self, X, y=None):
-		for var in self.vars:
-			X[f'{var}_NA'] = np.where(X[var].isnull(), 1, 0)
-			X[var] = X.groupby('name')[var].apply(lambda x: x.fillna(x.median()))
-
-		return X
 
 
 

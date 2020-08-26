@@ -13,7 +13,7 @@ class MissingCat(BaseEstimator, TransformerMixin):
 
 	def transform(self, X, y=None):
 		for var in self.vars:
-			X[var].fillna('NA', inplace=True)
+			X.loc[:, var] = X.loc[:, var].fillna('NA')
 
 		return X
 
@@ -27,9 +27,27 @@ class DateColumns(BaseEstimator, TransformerMixin):
 
 	def transform(self, X, y=None):
 		for var in self.vars:
-			X[f'{var}_DAY'] = X[var].dt.day
-			X[f'{var}_MONTH'] = X[var].dt.month
-			X[f'{var}_YEAR'] = X[var].dt.year
+			X.loc[:, f'{var}_DAY'] = X.loc[:, var].dt.day
+			X.loc[:, f'{var}_MONTH'] = X.loc[:, var].dt.month
+			X.loc[:, f'{var}_YEAR'] = X.loc[:, var].dt.year
+
+		return X
+
+
+class MissingNum(BaseEstimator, TransformerMixin):
+	def __init__(self, vars):
+		self.vars = vars
+
+	def fit(self, X, y=None):
+		return self
+
+	def transform(self, X, y=None):
+		for var in self.vars:
+			X.loc[:, f'{var}_NA'] = np.where(X[var].isnull(), 1, 0)
+			X.loc[:, var] = X.groupby('name')[var].apply(lambda x: x.fillna(x.median()))
+			X.loc[:, var] = X[var].fillna(X[var].median())
+
+		return X
 
 
 class OneHotEncoder(BaseEstimator, TransformerMixin):
@@ -46,5 +64,16 @@ class OneHotEncoder(BaseEstimator, TransformerMixin):
 		return X
 
 
+class DropColumns(BaseEstimator, TransformerMixin):
+	def __init__(self, vars):
+		self.vars = vars
+
+	def fit(self, X, y=None):
+		return self
+
+	def transform(self, X, y=None):
+		X = X.drop(columns=self.vars)
+
+		return X
 
 
