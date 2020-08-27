@@ -9,7 +9,7 @@ from datetime import datetime
 from database_connection.database_connection import connect_to_database
 
 
-class ProcessDataLine:
+class ProcessDataLinestar:
 
     def __init__(self):
         self.s3 = boto3.resource('s3')
@@ -66,12 +66,9 @@ class ProcessDataLine:
                 self.event_id = data['Ownership']['PeriodId']
                 self.tmp_data = {}
                 
-                _transform_salary_data(data, key)
-                _transform_matchup_data(data, key)
+                self._transform_salary_data(data, key)
+                self._transform_matchup_data(data, key)
                 #_transform_ownership_data(data, key)
-                
-                for player in self.tmp_data[self.event_id].keys():
-                    self.tmp_data[self.event_id][player]['projections'] = data['projections']
             
                 self.processed_files[key].append(self.tmp_data)
 
@@ -94,7 +91,7 @@ class ProcessDataLine:
             for player in table['PlayerMatchups']:
                 player_id = player['PlayerId']
     
-                if player_id in id_store or player_id not in new_cache[event_id].keys(): #why wouldn't it be in the data_cache?
+                if player_id in id_store or player_id not in self.tmp_data[self.event_id].keys(): #why wouldn't it be in the data_cache?
                     continue
                 else:
                     id_store.append(player_id)

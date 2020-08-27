@@ -29,6 +29,7 @@
 
 NO SIBLING OR PARENT IMPORTS
 
+################################################
 
 if sys.argv[1] == 'pga':
     from pipeline import pipe_pga as pipe
@@ -39,37 +40,24 @@ def predict():
     pipe.fit(df)
     pipe.predict(df)
 
+################################################
 
-
-API:
-- pull new data
-- process new data
-- load models & make predictions
-
-
-Prototype:
-- new preprocessors
-- new models
-- upload code
-
-
-Tests:
-- test preprocessing, model training, predictions
-- not to be run manually, but part of deployment
-
-
-
-Functionality:
-- get predictions
-- save files to s3 (only permanent files - projections not needed)
+API calls:
+- update data and process in data warehouse; create new prototype csv; run weekly?
+- make predictions: pull new projections; transform; load models; make predictions
+	- do not store projection data
 
 
 
 STEPS:
+- update data to s3
+- transform s3 data to rds, csv
 - train pipeline
+- pull projection data & transform
 - make predictions on new data via prediction.py
-- work on ETL pipelines (raw data & prediction)
-	- no need for projections in s3
+- optimize predictions
+
+ADD'L STEPS:
 - flesh out notebook pipeline
 	- look into ARIMA variables (PACF, ACF, trend differencing)
 - deployment:
