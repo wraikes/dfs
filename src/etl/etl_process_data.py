@@ -6,11 +6,11 @@ import numpy as np
 from datetime import datetime
 
 
-class LinearstarappData:
+class LinestarappData:
 
     def __init__(self):
         self.s3 = boto3.resource('s3')
-        self.bucket = s3.Bucket('my-dfs-data') 
+        self.bucket = self.s3.Bucket('my-dfs-data') 
          
         self.sites = ['fd', 'dk']
         self.raw_files = {}
@@ -102,6 +102,8 @@ class LinearstarappData:
             csv_buffer = StringIO()
             df.to_csv(csv_buffer, index=False)
             s3.Object(bucket.name, f'{sport}/modeling/data_{site}.csv').put(Body=csv_buffer.getvalue())
+
+
 
                 
     # def _transform_ownership_data(json_data, key):
