@@ -75,10 +75,15 @@ class RawDataLine:
 
         while not reach_max_pid:
             for site, site_num in self.site.items():
-                data = self._pull_json_data(pid, site_num)
-               
-                #future reference: some pids are missing (eg nba pid in 408, 606, 775, 1026)
-                 
+                data = self._pull_json_data(pid, site_num)              
+
+                if self.sport == 'mma':
+                    if pid in [243, 247]:
+                        continue
+                elif self.sport == 'nba':
+                    if pid in [408, 606, 775, 1026]:
+                        continue
+
                 #stop if no data  #######should be a better way to do this
                 try:
                     if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
