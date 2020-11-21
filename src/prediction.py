@@ -21,7 +21,10 @@ def predict(data):
 
 if __name__ == '__main__':
 
-	#load prediction data
+	#pull projection data
+	####TODO
+
+	#transform projection data
 	df = pd.read_csv('../data/nascar_fd.csv', parse_dates=['date'])
 	df = df[df.projections==True]
 

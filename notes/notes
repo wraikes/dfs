@@ -68,6 +68,14 @@ ADD'L STEPS:
 	- config
 
 
+NOTEBOOKS:
+- pipeline (production)
+- eda
+- model_build
+- prediction (production)
+
+
+
 
 
 

@@ -61,7 +61,7 @@ class RawDataLine:
         self.site = {'fd': 1, 'dk': 2}
 
         self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'
-        self.folder = '{}/linestarapp'.format(self.sport)
+        self.folder = f'{self.sport}/linestarapp'
 
 
     def update_data(self):
@@ -79,7 +79,7 @@ class RawDataLine:
                
                 #future reference: some pids are missing (eg nba pid in 408, 606, 775, 1026)
                  
-                #stop if no data
+                #stop if no data  #######should be a better way to do this
                 try:
                     if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
                         reach_max_pid = True
@@ -93,7 +93,7 @@ class RawDataLine:
                     reach_max_pid = True
                     break
 
-                object_name = '{}/{}_{}.json'.format(self.folder, site, pid)
+                object_name = f'{self.folder}/{site}_{pid}.json'
                 
                 #save new data
                 obj = self.s3.Object(self.bucket.name, object_name)
@@ -108,13 +108,13 @@ class RawDataLine:
             pid += 1
 
 
-    def _delete_projections(self):
-        '''If s3 object is a projection, then delete object'''
-        for obj in self.bucket.objects.filter(Prefix=self.folder):
-            if 'json' in obj.key and 'projections' in obj.key:
+    # def _delete_projections(self):
+    #     '''If s3 object is a projection, then delete object'''
+    #     for obj in self.bucket.objects.filter(Prefix=self.folder):
+    #         if 'json' in obj.key and 'projections' in obj.key:
         
-                #delete old projections data
-                self.s3.Object('my-dfs-data', obj.key).delete()  
+    #             #delete old projections data
+    #             self.s3.Object('my-dfs-data', obj.key).delete()  
         
         
     def _get_max_pid(self):
@@ -123,7 +123,9 @@ class RawDataLine:
         
         for obj in self.bucket.objects.filter(Prefix=self.folder):
             if 'json' in obj.key:
-                pid = self._get_pid(obj.key)
+
+                #get pid from key
+                pid = int(obj.key.split('/')[-1].split('.')[0].split('_')[1])
                 
                 if max_pid < pid:
                     max_pid = pid
@@ -148,11 +150,11 @@ class RawDataLine:
         return sum_pts == 0
 
 
-    def _get_pid(self, key):
-        '''Get pid from object key'''
-        pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
+    # def _get_pid(self, key):
+    #     '''Get pid from object key'''
+    #     pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
 
-        return pid
+    #     return pid
 
 
 
