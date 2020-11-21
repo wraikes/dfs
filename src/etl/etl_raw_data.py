@@ -77,6 +77,7 @@ class RawDataLine:
             for site, site_num in self.site.items():
                 data = self._pull_json_data(pid, site_num)              
 
+                #skip pids that are not available ###### should be a better way to handle this
                 if self.sport == 'mma':
                     if pid in [243, 247]:
                         continue
