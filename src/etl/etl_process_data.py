@@ -4,14 +4,17 @@ import json
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from io import StringIO
 
 
 class LinestarappData:
 
-    def __init__(self):
+    def __init__(self, sport):
         self.s3 = boto3.resource('s3')
         self.bucket = self.s3.Bucket('my-dfs-data') 
-         
+        
+        self.sport = sport
+
         self.sites = ['fd', 'dk']
         self.raw_files = {}
         self.processed_files = {}
@@ -22,19 +25,19 @@ class LinestarappData:
         self.event_id = None
 
 
-    def extract(self, sport):
+    def extract(self):
     
         for site in self.sites:
             self.raw_files[site] = []
     
             #loop thru bucket and extract data
-            for obj in bucket.objects.filter(Prefix=f'{sport}/linestarapp/{site}'):
+            for obj in self.bucket.objects.filter(Prefix=f'{self.sport}/linestarapp/{site}'):
             
                 #skip objects if folder or projection data
                 if obj.key[-1] == '/':
                     continue
                 
-                file = s3.Object('my-dfs-data', obj.key)
+                file = self.s3.Object('my-dfs-data', obj.key)
                 data = file.get()['Body'].read()
                 data = json.loads(data)     
                 #data['projections'] = projections
@@ -76,7 +79,7 @@ class LinestarappData:
                 player_id = player['PlayerId']
     
                 #this avoids duplicates
-                if player_id in id_store:
+                if player_id in id_store or player_id not in self.tmp_data[self.event_id].keys():
                     continue
                 else:
                     id_store.append(player_id)
@@ -93,15 +96,16 @@ class LinestarappData:
 
             for data in self.processed_files[site]:
                 tmp_df = pd.DataFrame.from_dict(
-                    {(i,j): tmp_data[i][j] for i in tmp_data.keys() for j in tmp_data[i].keys()},
+                    {(i,j): self.tmp_data[i][j] for i in self.tmp_data.keys() for j in self.tmp_data[i].keys()},
                     orient='index'
                 )
 
                 df = df.append(tmp_df)
             
+            #save df to bucket
             csv_buffer = StringIO()
             df.to_csv(csv_buffer, index=False)
-            s3.Object(bucket.name, f'{sport}/modeling/data_{site}.csv').put(Body=csv_buffer.getvalue())
+            self.s3.Object(self.bucket.name, f'{self.sport}/modeling/data_{site}.csv').put(Body=csv_buffer.getvalue())
 
 
 
