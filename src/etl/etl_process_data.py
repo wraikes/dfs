@@ -96,12 +96,16 @@ class LinestarappData:
 
             for data in self.processed_files[site]:
                 tmp_df = pd.DataFrame.from_dict(
-                    {(i,j): self.tmp_data[i][j] for i in self.tmp_data.keys() for j in self.tmp_data[i].keys()},
+                    {(i,j): data[i][j] for i in data.keys() for j in data[i].keys()},
                     orient='index'
                 )
 
                 df = df.append(tmp_df)
             
+            cols = list(df.columns)
+            df = df.reset_index()
+            df.columns = ['event_id', 'player_id'] + cols
+
             #save df to bucket
             csv_buffer = StringIO()
             df.to_csv(csv_buffer, index=False)

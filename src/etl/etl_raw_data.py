@@ -58,7 +58,7 @@ class RawDataLine:
 
         self.sport_id = self.parameters[self.sport]['sport']
         self.pid_start = self.parameters[self.sport]['pid_start']
-        self.site = {'fd': 1, 'dk': 2}
+        self.site = {'fd': 2, 'dk': 1}
 
         self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'
         self.folder = f'{self.sport}/linestarapp'
