@@ -21,10 +21,10 @@ class LinestarETL:
         self.processed_files = {}
         self.final_df = {}
 
-        self.folder = f'{self.sport}/linestarapp/{site}'
-        self.folder_projections = f'{self.sport}/modeling/projections/{site}'
-        self.data_save = f'{self.sport}/modeling/data_{site}'
-        self.data_save_projections = f'{self.sport}/modeling/projections_data_{site}'
+        self.folder = f'{self.sport}/linestarapp/'
+        self.folder_projections = f'{self.sport}/modeling/projections/'
+        self.data_save = f'{self.sport}/modeling/data_'
+        self.data_save_projections = f'{self.sport}/modeling/projections_data_'
 
         #temp cache for updating records
         self.tmp_data = {}
@@ -39,7 +39,7 @@ class LinestarETL:
             #loop thru bucket and extract data
             prefix = self.folder_projections if self.projections else self.folder
 
-            for obj in self.bucket.objects.filter(Prefix=prefix):
+            for obj in self.bucket.objects.filter(Prefix=f'{prefix}{site}'):
             
                 #skip objects if folder or projection data
                 if obj.key[-1] == '/':
@@ -118,7 +118,7 @@ class LinestarETL:
             
             csv_buffer = StringIO()
             df.to_csv(csv_buffer, index=False)
-            self.s3.Object(self.bucket.name, f'{data_save}.csv').put(Body=csv_buffer.getvalue())
+            self.s3.Object(self.bucket.name, f'{data_save}{site}.csv').put(Body=csv_buffer.getvalue())
 
 
 

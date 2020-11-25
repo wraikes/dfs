@@ -52,10 +52,9 @@ class RawDataLine:
     }
     
 
-    def __init__(self, sport, projections):
+    def __init__(self, sport):
         '''Initialize class'''
         self.sport = sport
-        self.projections = projections
 
         self.sport_id = self.parameters[self.sport]['sport']
         self.pid_start = self.parameters[self.sport]['pid_start']
@@ -81,38 +80,27 @@ class RawDataLine:
             for site, site_num in self.site.items():
                 data = self._pull_json_data(pid, site_num)              
 
-                #skip pids that are not available ###### should be a better way to handle this
-                # if self.sport == 'mma':
-                #     if pid in [243, 247]:
-                #         continue
-                # elif self.sport == 'nba':
-                #     if pid in [408, 606, 775, 1026]:
-                #         continue
-
                 #stop if no data  #######should be a better way to do this
                 try:
                     if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
                         count += 1
                         if count == 9:
                             reach_max_pid = True
-                            break
+                        break
                 except:
                     count += 1
                     if count == 9:
                         reach_max_pid = True
-                        break
+                    break
                 
                 #check if projections data and name as such
                 if self._check_projection(data):
                     reach_max_pid = True
                     object_name = f'{self.folder_projection}/{site}_{pid}_projections.json'
 
-                    break
-                    
                 else:
                     count = 0
-
-                object_name = f'{self.folder}/{site}_{pid}.json'
+                    object_name = f'{self.folder}/{site}_{pid}.json'
                 
                 #save new data
                 obj = self.s3.Object(self.bucket.name, object_name)
