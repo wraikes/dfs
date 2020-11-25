@@ -7,13 +7,14 @@ from datetime import datetime
 from io import StringIO
 
 
-class LinestarappData:
+class LinestarETL:
 
-    def __init__(self, sport):
+    def __init__(self, sport, projections):
         self.s3 = boto3.resource('s3')
         self.bucket = self.s3.Bucket('my-dfs-data') 
         
         self.sport = sport
+        self.projections = projections
 
         self.sites = ['fd', 'dk']
         self.raw_files = {}

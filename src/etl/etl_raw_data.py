@@ -52,19 +52,21 @@ class RawDataLine:
     }
     
 
-    def __init__(self, sport):
+    def __init__(self, sport, projections):
         '''Initialize class'''
         self.sport = sport
+        self.projections = projections
 
         self.sport_id = self.parameters[self.sport]['sport']
         self.pid_start = self.parameters[self.sport]['pid_start']
-        self.site = {'fd': 2, 'dk': 1}
+        self.site = {'dk': 1, 'fd': 2}
 
         self.html = 'https://www.linestarapp.com/DesktopModules/DailyFantasyApi/API/Fantasy/GetSalariesV4?sport={}&site={}&periodId={}'
         self.folder = f'{self.sport}/linestarapp'
+        self.folder_projection = f'{self.sport}/modeling/projections'
 
 
-    def update_data(self):
+    def pull_data(self):
         '''Update database with new sport data if applicable'''
 
         #get starting pid reference number for html download
@@ -72,31 +74,40 @@ class RawDataLine:
 
         #pull new json data and save to s3
         reach_max_pid = False
+        count = 0
 
         while not reach_max_pid:
+
             for site, site_num in self.site.items():
                 data = self._pull_json_data(pid, site_num)              
 
                 #skip pids that are not available ###### should be a better way to handle this
-                if self.sport == 'mma':
-                    if pid in [243, 247]:
-                        continue
-                elif self.sport == 'nba':
-                    if pid in [408, 606, 775, 1026]:
-                        continue
+                # if self.sport == 'mma':
+                #     if pid in [243, 247]:
+                #         continue
+                # elif self.sport == 'nba':
+                #     if pid in [408, 606, 775, 1026]:
+                #         continue
 
                 #stop if no data  #######should be a better way to do this
                 try:
                     if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
+                        count += 1
+                        if count == 9:
+                            reach_max_pid = True
+                            break
+                except:
+                    count += 1
+                    if count == 9:
                         reach_max_pid = True
                         break
-                except:
-                    reach_max_pid = True
-                    break
                 
                 #check if projections data and name as such
                 if self._check_projection(data):
                     reach_max_pid = True
+
+                    object_name = f'{self.folder}/{site}_{pid}_projections.json'
+
                     break
 
                 object_name = f'{self.folder}/{site}_{pid}.json'
@@ -112,15 +123,6 @@ class RawDataLine:
             
             #update pid
             pid += 1
-
-
-    # def _delete_projections(self):
-    #     '''If s3 object is a projection, then delete object'''
-    #     for obj in self.bucket.objects.filter(Prefix=self.folder):
-    #         if 'json' in obj.key and 'projections' in obj.key:
-        
-    #             #delete old projections data
-    #             self.s3.Object('my-dfs-data', obj.key).delete()  
         
         
     def _get_max_pid(self):
@@ -156,18 +158,49 @@ class RawDataLine:
         return sum_pts == 0
 
 
-    # def _get_pid(self, key):
-    #     '''Get pid from object key'''
-    #     pid = int(key.split('/')[-1].split('.')[0].split('_')[1])
+    # def pull_projections(self):
+    #     #get starting pid reference number for html download
+    #     pid = self._get_max_pid() + 1        
 
-    #     return pid
+    #     while True:
+    #         for site, site_num in self.site.items():
+    #             data = self._pull_json_data(pid, site_num)              
 
+    #             #skip pids that are not available ###### should be a better way to handle this
+    #             if self.sport == 'mma':
+    #                 if pid in [243, 247]:
+    #                     continue
+    #             elif self.sport == 'nba':
+    #                 if pid in [408, 606, 775, 1026]:
+    #                     continue
 
+    #             #stop if no data  #######should be a better way to do this
+    #             try:
+    #                 if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
+    #                     reach_max_pid = True
+    #                     break
+    #             except:
+    #                 reach_max_pid = True
+    #                 break
+                
+    #             #check if projections data and name as such
+    #             if self._check_projection(data):
+    #                 reach_max_pid = True
+    #                 break
 
+    #             object_name = f'{self.folder}/{site}_{pid}.json'
+                
+    #             #save new data
+    #             obj = self.s3.Object(self.bucket.name, object_name)
+    #             obj.put(
+    #                 Body=json.dumps(data)
+    #             )
 
-
-
-
+    #             #print pid for monitoring
+    #             print(site, pid)                 
+            
+    #         #update pid
+    #         pid += 1
 
 
 
