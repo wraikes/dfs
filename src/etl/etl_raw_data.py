@@ -105,10 +105,12 @@ class RawDataLine:
                 #check if projections data and name as such
                 if self._check_projection(data):
                     reach_max_pid = True
-
-                    object_name = f'{self.folder}/{site}_{pid}_projections.json'
+                    object_name = f'{self.folder_projection}/{site}_{pid}_projections.json'
 
                     break
+                    
+                else:
+                    count = 0
 
                 object_name = f'{self.folder}/{site}_{pid}.json'
                 
@@ -119,7 +121,7 @@ class RawDataLine:
                 )
 
                 #print pid for monitoring
-                print(site, pid)                 
+                print(site, pid, count)        
             
             #update pid
             pid += 1

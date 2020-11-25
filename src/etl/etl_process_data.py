@@ -21,6 +21,11 @@ class LinestarETL:
         self.processed_files = {}
         self.final_df = {}
 
+        self.folder = f'{self.sport}/linestarapp/{site}'
+        self.folder_projections = f'{self.sport}/modeling/projections/{site}'
+        self.data_save = f'{self.sport}/modeling/data_{site}'
+        self.data_save_projections = f'{self.sport}/modeling/projections_data_{site}'
+
         #temp cache for updating records
         self.tmp_data = {}
         self.event_id = None
@@ -32,7 +37,9 @@ class LinestarETL:
             self.raw_files[site] = []
     
             #loop thru bucket and extract data
-            for obj in self.bucket.objects.filter(Prefix=f'{self.sport}/linestarapp/{site}'):
+            prefix = self.folder_projections if self.projections else self.folder
+
+            for obj in self.bucket.objects.filter(Prefix=prefix):
             
                 #skip objects if folder or projection data
                 if obj.key[-1] == '/':
@@ -41,7 +48,6 @@ class LinestarETL:
                 file = self.s3.Object('my-dfs-data', obj.key)
                 data = file.get()['Body'].read()
                 data = json.loads(data)     
-                #data['projections'] = projections
                 self.raw_files[site].append(data)
 
     
@@ -55,7 +61,7 @@ class LinestarETL:
             for data in self.raw_files[site]:
                 self._transform_salary_data(data, site)
                 self._transform_matchup_data(data, site)
-            
+                
                 self.processed_files[site].append(self.tmp_data)
 
 
@@ -108,9 +114,11 @@ class LinestarETL:
             df.columns = ['event_id', 'player_id'] + cols
 
             #save df to bucket
+            data_save = self.data_save_projections if self.projections else self.data_save
+            
             csv_buffer = StringIO()
             df.to_csv(csv_buffer, index=False)
-            self.s3.Object(self.bucket.name, f'{self.sport}/modeling/data_{site}.csv').put(Body=csv_buffer.getvalue())
+            self.s3.Object(self.bucket.name, f'{data_save}.csv').put(Body=csv_buffer.getvalue())
 
 
 
