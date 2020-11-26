@@ -1,24 +1,23 @@
 /src
 	/etl
-		etl_raw_pull.py
-		[PLACEHOLDER]
-	/trained_models
+		etl_raw_data.py
+		etl_process_data.py
+	/train_model
 		mdl_pga.py
 		mdl_mma.py
+	/model (developed locally)
+		mdl_pga.pkl
+		mdl_mma.pkl
 	/optimizer
 		optimize_base.py
 		optimize_pga.py
 		optimize_mma.py
-	/helpers
-		connect_database.py
-		load_data.py
 	/preprocessing
 		pp_base.py
 		pp_pga.py
 		pp_mma.py
 	/config
 		config.py
-	create_tables.py
 	train_pipeline.py
 	predict.py
 	pipelines.py
@@ -84,6 +83,19 @@ NOTEBOOKS:
 
 
 
+
+
+all done in cloud except for prototyping
+- pull into s3
+- process into csv for prototyping
+- build model and serialize (locally)
+- load model
+- pull projections
+- process projections
+- make predictions
+
+model refreshes
+- model refreshes each new week (trained on add'l data)
 
 
 

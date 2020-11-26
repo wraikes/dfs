@@ -112,6 +112,7 @@ class LinestarETL:
             cols = list(df.columns)
             df = df.reset_index()
             df.columns = ['event_id', 'player_id'] + cols
+            self.final_df[site] = df.copy()
 
             #save df to bucket
             data_save = self.data_save_projections if self.projections else self.data_save

@@ -1,16 +1,13 @@
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 from preprocessing import pp_base
-from preprocessing import pp_nascar
+from preprocessing import pp_mma
 from config import config
 
-pipe_nascar = make_pipeline(
+pipe_mma = make_pipeline(
 	pp_base.MissingCat(config.CAT_COLS),
-	pp_base.DateColumns(config.DATE_COLS),
-	pp_base.OneHotEncoder(config.CAT_COLS),
-	pp_base.MissingNum(config.NUM_COLS),
-	pp_base.DropColumns(config.DROP_COLS),
 	GradientBoostingRegressor(
 		learning_rate=0.01, 
 		max_depth=4, 
