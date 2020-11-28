@@ -59,13 +59,14 @@ class LinestarETL:
             self.processed_files[site] = []
              
             for data in self.raw_files[site]:
-                self._transform_salary_data(data, site)
-                self._transform_matchup_data(data, site)
+                self._transform_salary_data(data)
+                self._transform_matchup_data(data)
+                self._transform_updates(data)
                 
                 self.processed_files[site].append(self.tmp_data)
 
 
-    def _transform_salary_data(self, json_data, key):
+    def _transform_salary_data(self, json_data):
         self.event_id = json_data['Ownership']['PeriodId']
         self.tmp_data = {}
         self.tmp_data[self.event_id] = {}
@@ -76,7 +77,7 @@ class LinestarETL:
             self.tmp_data[self.event_id][player_id] = player_data
     
     
-    def _transform_matchup_data(self, json_data, key):
+    def _transform_matchup_data(self, json_data):
       
         for i, table in enumerate(json_data['MatchupData']):
             col_names = table['Columns']
@@ -95,6 +96,32 @@ class LinestarETL:
                 
                 for key, value in player_dict.items():
                     self.tmp_data[self.event_id][player_id][f'{key}_{i}'] = value
+
+
+    def _transform_updates(self, json_data):
+        salaryid_cache = []
+
+        updates = json.loads(json_data['SalaryContainerJson'])
+        for update in updates['SalariesMap']['Variants']:
+
+            salaryid = update['psid']
+            pp = update['sp']
+            sal = update['s']
+            pid = None
+
+            if salaryid in salaryid_cache:
+                continue
+                
+            for player_id in self.tmp_data[self.event_id].keys():
+                idx = self.tmp_data[self.event_id][player_id]['Id']
+
+                if salaryid == self.tmp_data[self.event_id][player_id]['Id']:
+                    pid = player_id
+                    salaryid_cache.append(salaryid)
+            if pid:
+                self.tmp_data[self.event_id][pid]['PP'] = pp
+                self.tmp_data[self.event_id][pid]['SAL'] = sal
+
 
     def load(self):
 
