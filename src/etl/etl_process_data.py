@@ -99,28 +99,27 @@ class LinestarETL:
 
 
     def _transform_updates(self, json_data):
-        salaryid_cache = []
+        maps = json.loads(json_data['SalaryContainerJson'])['SalariesMap']['SlateSalaryMap']
+        keys = list(maps.keys())
+        updates = json.loads(json_data['SalaryContainerJson'])['SalariesMap']['Variants']
 
-        updates = json.loads(json_data['SalaryContainerJson'])
-        for update in updates['SalariesMap']['Variants']:
+        for key in keys[::-1]:
+            for update in updates:
+                if update['Id'] in maps[key]: 
+                    salaryid = update['psid']
+                    pp = update['sp']
+                    sal = update['s']
+                    pid = None
 
-            salaryid = update['psid']
-            pp = update['sp']
-            sal = update['s']
-            pid = None
+                    for player_id in self.tmp_data[self.event_id].keys():
+                        idx = self.tmp_data[self.event_id][player_id]['Id']
 
-            if salaryid in salaryid_cache:
-                continue
-                
-            for player_id in self.tmp_data[self.event_id].keys():
-                idx = self.tmp_data[self.event_id][player_id]['Id']
-
-                if salaryid == self.tmp_data[self.event_id][player_id]['Id']:
-                    pid = player_id
-                    salaryid_cache.append(salaryid)
-            if pid:
-                self.tmp_data[self.event_id][pid]['PP'] = pp
-                self.tmp_data[self.event_id][pid]['SAL'] = sal
+                        if salaryid == self.tmp_data[self.event_id][player_id]['Id']:
+                            pid = player_id
+                            salaryid_cache.append(salaryid)
+                    if pid:
+                        self.tmp_data[self.event_id][pid]['PP'] = pp
+                        self.tmp_data[self.event_id][pid]['SAL'] = sal
 
 
     def load(self):
