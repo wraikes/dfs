@@ -8,78 +8,63 @@ from etl.etl_process_data import LinestarETL
 
 from config import config
 
-# pull new projection data
-# transform projection data
-# predict data (done)
-# optimize prediction and print lineups
+
+def dedupe(data):
+    gids = data.groupby('GID').size()
+    gids = gids[gids==2].index.to_list()
+    
+    data = data[data.GID.isin(gids)]
+
+    return data
+    
 
 def predict(data):
-	#load pipeline
-	pipe = joblib.load('./trained_models/mdl_mma.pkl')
+	#load pipelines (should be numerous)
+	pipes = joblib.load('./models/pipes_mma.pkl')
 
-	#predict
-	predictions = pipe.predict(data[config.ALL_COLS])
+	#loop thru pipelines
+	for i, pipe in enumerate(pipes):
+		data['preds_{i}'] = pipe.predict(data[config.ALL_COLS])
 
-	return predictions
+	#aggregate
+	data['preds'] = data[[x for x in data.columns if 'preds' in x]].mean(axis=1)
+
+	return data
+
+
+def optimize(data, site):
+	opt = Optimizer(data, 'mma', site)
+	opt.solve()
+	opt.get_lineup()
+
+	return opt.lineup
 
 
 if __name__ == '__main__':
 
-	#pull projection data
-	####TODO
+	#pull new projection data
+	raw_data = RawDataLine('mma')
+	raw_data.pull_data()
 
-	#transform projection data
-	df = pd.read_csv('../data/nascar_fd.csv', parse_dates=['date'])
-	df = df[df.projections==True]
+	#process projection data
+	data = LinestarETL('mma', True)
+	data.extract()
+	data.transform()
+	data.load()
 
-	preds = predict(df)
+	for site in ['fd', 'dk']:
+		print(f'{site}:')
 
-	for name, pred in zip(df.name, preds):
-		print(f'{name}: {pred}')
+		#load projection data
+		data = raw_data[site]
+		data = dedupe(data)
+		
+		#make predictions & lineups
+		df = predict(data)
+		lineup = optimize(df, site)
 
-
-
-
-# if __name__ == '__main__':
-# 	model = joblib.load('./models/mma_model.pkl')
-	
-# 	df_fd = pd.read_csv('./')
-# 	df_dk = pd.read_csv('./')
-
-# 	pull = RawDataLine('mma')
-# 	pull.pull_data()
-
-# 	process = LinestarETL('mma', True)
-# 	process.extract()
-# 	process.transform()
-# 	process.load()
-
-# 	df = process.final_df.copy()
-
-
-# 	cols = [
-# 	    'SAL', 'PP', 'Max Rounds_0',
-# 	    'Vegas Odds_0', 'Full Fight Odds_0', 'SS Landed/F_1', 'SS Landed/Min_1',
-# 	    'Strike Acc%_1', 'Takedowns/F_1', 'Rounds/F_1', 'Win%_1', 'FPPG_1',
-# 	    'SS Taken/F_2', 'SS Taken/Min_2', 'Strike Def%_2',
-# 	    'Takedowns Taken/F_2', 'Takedown Def%_2', 'FPPG Allowed_2',
-# 	    'SS Landed/F_3', 'SS Landed/Min_3', 'Strike Acc%_3', 'Takedowns/F_3',
-# 	    'Rounds/F_3', 'Win%_3', 'FPPG_3', 'SS Taken/F_4', 'SS Taken/Min_4',
-# 	    'Strike Def%_4', 'Takedowns Taken/F_4', 'Takedown Def%_4',
-# 	    'FPPG Allowed_4', 'Win Pct_0'
-# 	]
-
-
-# 	df['preds'] = model.predict(df[cols].fillna(0))
-
-
-
-
-
-
-
-
-
+		#print lineups
+		print(df[df.Name.isin(lineup)][['Name', 'preds', 'SAL']].sort_values(by='preds'))
 
 
 

@@ -19,22 +19,28 @@ class Optimizer:
         self.salaries = {}
         self.points = {}
         self.vars = {}
-        
+       
+    
     def _set_vars(self):
         
-        self.salaries = self.df[['Name', 'SAL']].set_index('Name').to_dict()['SAL']
-        self.points = self.df[['Name', 'preds']].set_index('Name').to_dict()['preds']            
+        for gid in self.df.GID.unique():
+            df_gid = self.df[self.df.GID==gid]
+            salary = list(df_gid[["Name", "SAL"]].set_index("Name").to_dict().values())[0]
+            point = list(df_gid[["Name", "preds"]].set_index("Name").to_dict().values())[0]
+            self.salaries[gid] = salary
+            self.points[gid] = point
 
-        self.vars = {k: pulp.LpVariable(k, cat="Binary") for k in self.salaries.keys()} 
+        self.vars = {k: pulp.LpVariable.dict(k, v, cat="Binary") for k, v in self.points.items()} 
 
 
     def solve(self):
         self._set_vars()
         
         for k, v in self.vars.items():
-            self.costs += pulp.lpSum([self.salaries[k] * self.vars[k]])
-            self.rewards += pulp.lpSum([self.points[k] * self.vars[k]])
-            self.total_picks += pulp.lpSum([self.vars[k] * 1])
+            self.costs += pulp.lpSum([self.salaries[k][i] * self.vars[k][i] for i in v])
+            self.rewards += pulp.lpSum([self.points[k][i] * self.vars[k][i] for i in v])
+            self.total_picks += pulp.lpSum([self.vars[k][i] * 1 for i in v])
+            self.optimizer += pulp.lpSum([self.vars[k][i] for i in v]) <= 1
 
         self.optimizer += pulp.lpSum(self.rewards)
         self.optimizer += pulp.lpSum(self.total_picks) == 6
@@ -51,5 +57,5 @@ class Optimizer:
     def get_lineup(self):
         for v in self.optimizer.variables():
             if v.varValue > 0:
-                self.lineup.append(' '.join(v.name.split('_')))
+                self.lineup.append(' '.join(v.name.split('_')[1:]))
 
