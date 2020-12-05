@@ -116,7 +116,6 @@ class LinestarETL:
 
                         if salaryid == self.tmp_data[self.event_id][player_id]['Id']:
                             pid = player_id
-                            salaryid_cache.append(salaryid)
                     if pid:
                         self.tmp_data[self.event_id][pid]['PP'] = pp
                         self.tmp_data[self.event_id][pid]['SAL'] = sal

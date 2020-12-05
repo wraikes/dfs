@@ -6,6 +6,7 @@ import numpy as np
 class Optimizer:
     def __init__(self, df, sport, site, invert=False):
         self.df = df
+        self.df.GID = self.df.GID.astype('str')
         self.site = site
         self.sport = sport
         self.invert = invert

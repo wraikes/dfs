@@ -1,23 +1,6 @@
 import pandas as pd
 import numpy as np
-
-
-class Dedupe(BaseEstimator, TransformerMixin):
-
-    def __init__(self):
-        pass
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X, y=None):
-
-        gids = X.groupby('GID').size()
-        gids = gids[gids==2].index.to_list()
-    
-        X = X[X.GID.isin(gids)]
-
-        return X
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class GidString(BaseEstimator, TransformerMixin):
