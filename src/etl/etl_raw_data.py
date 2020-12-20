@@ -79,17 +79,18 @@ class RawDataLine:
 
             for site, site_num in self.site.items():
                 data = self._pull_json_data(pid, site_num)              
-
+                if pid <= 1321:
+                    continue
                 #stop if no data  #######should be a better way to do this
                 try:
                     if len(data['Ownership']['Salaries']) == 0:  #######is this accurate for all sports?
                         count += 1
-                        if count == 9:
+                        if count == 10:
                             reach_max_pid = True
                         break
                 except:
                     count += 1
-                    if count == 9:
+                    if count == 10:
                         reach_max_pid = True
                     break
                 
